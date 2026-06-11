@@ -88,3 +88,23 @@ def test_ekva_policy_with_entropy_map():
     )
     assert sum(budgets.values()) == 2048
     assert all(b >= 64 for b in budgets.values())
+
+
+def test_kv_buffer_eviction_attention():
+    """Attention-based eviction must keep buffer size <= budget without crashing."""
+    buf = ExpertKVBuffer(budget=4, head_dim=2, num_heads=2, eviction="attention", dtype=torch.float32)
+    for i in range(6):
+        k = torch.randn(1, 2, 2)
+        v = torch.randn(1, 2, 2)
+        cur_size = max(min(i, 4), 1)
+        attn_w = torch.rand(1, 2, cur_size)
+        buf.update(k, v, attn_weights=attn_w)
+    assert buf.size == 4
+
+
+def test_random_policy_tight_budget():
+    """RandomPolicy must terminate when min_per_expert × num_experts == total_budget."""
+    policy = RandomPolicy()
+    # 8 × 256 = 2048: correction loop has zero slack, must still terminate
+    budgets = policy.allocate(num_experts=8, total_budget=2048, min_per_expert=256)
+    assert all(b >= 256 for b in budgets.values())

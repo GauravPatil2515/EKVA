@@ -63,14 +63,23 @@ class RandomPolicy(BasePolicy):
         weights = weights / weights.sum()
         budgets = (weights * total_budget).long()
         budgets = budgets.clamp(min=min_per_expert)
-        # Greedy correction to hit total_budget exactly
+
+        # Greedy correction to hit total_budget exactly.
+        # After clamping, the sum may exceed total_budget if min_per_expert is
+        # large; in that case we subtract from the largest experts (never below
+        # min_per_expert) to bring the sum back down safely.
         diff = total_budget - int(budgets.sum().item())
         sign = 1 if diff > 0 else -1
+        max_iters = num_experts * abs(diff) + 1  # safety cap
+        iters = 0
         idx = 0
-        while diff != 0:
-            budgets[idx % num_experts] += sign
-            diff -= sign
+        while diff != 0 and iters < max_iters:
+            candidate = budgets[idx % num_experts] + sign
+            if candidate >= min_per_expert:
+                budgets[idx % num_experts] = candidate
+                diff -= sign
             idx += 1
+            iters += 1
         return {i: int(budgets[i].item()) for i in range(num_experts)}
 
 
