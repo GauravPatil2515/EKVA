@@ -22,6 +22,11 @@ def derive_kv_budget(
         approximately to total_budget.
     """
     num_experts = len(entropy_map)
+    if total_budget < num_experts * min_per_expert:
+        raise ValueError(
+            f"total_budget ({total_budget}) must be at least "
+            f"num_experts * min_per_expert ({num_experts * min_per_expert})"
+        )
     expert_ids = sorted(entropy_map.keys())
 
     # Aggregate a scalar importance score per expert

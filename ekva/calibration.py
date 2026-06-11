@@ -37,6 +37,12 @@ class ExpertStats:
             self.entropy_sum[layer_idx] += entropy_mean
             self.count[layer_idx] += 1
 
+    def update_token_entropies(self, layer_idx: int, token_entropies: torch.Tensor) -> None:
+        """Update running entropy statistics for specific tokens routed to this expert."""
+        with torch.no_grad():
+            self.entropy_sum[layer_idx] += token_entropies.sum().double()
+            self.count[layer_idx] += token_entropies.numel()
+
     def update_routing(self, num_tokens: int) -> None:
         self.routing_count += int(num_tokens)
 
@@ -52,11 +58,7 @@ class ExpertStats:
 
 
 def _get_moe_layers(model: nn.Module) -> List[nn.Module]:
-    """Best-effort extraction of MoE layers from Mixtral / DeepSeek-style models.
-
-    This function is intentionally conservative: you can customize it for your
-    specific HF model implementations by adjusting the class name checks.
-    """
+    """Best-effort extraction of MoE layers from Mixtral / DeepSeek-style models."""
     moe_layers: List[nn.Module] = []
     for module in model.modules():
         class_name = module.__class__.__name__.lower()
@@ -65,11 +67,42 @@ def _get_moe_layers(model: nn.Module) -> List[nn.Module]:
     return moe_layers
 
 
-def _entropy_from_logits(attn_logits: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
-    """Utility to convert attention logits to probabilities and compute entropy.
+def _get_layer_pairs(model: nn.Module) -> List[Tuple[nn.Module, nn.Module]]:
+    """Identify pairs of (attention_module, moe_module) for each layer."""
+    pairs = []
+    # Search for decoder blocks and extract their attention and MoE submodules
+    for module in model.modules():
+        class_name = module.__class__.__name__.lower()
+        if "decoderlayer" in class_name or "block" in class_name:
+            attn_module = None
+            moe_module = None
+            for name, child in module.named_children():
+                child_class = child.__class__.__name__.lower()
+                if "attention" in child_class or "attn" in child_class or "attention" in name or "attn" in name:
+                    attn_module = child
+                if "moe" in child_class or "mixtureofexperts" in child_class or "moe" in name:
+                    moe_module = child
+            if attn_module is not None and moe_module is not None:
+                pairs.append((attn_module, moe_module))
+                
+    if not pairs:
+        # Fallback to general listing if no decoder structure matches
+        attns = []
+        moes = []
+        for module in model.modules():
+            class_name = module.__class__.__name__.lower()
+            if "attention" in class_name or "attn" in class_name:
+                attns.append(module)
+            if "moe" in class_name or "mixtureofexperts" in class_name:
+                moes.append(module)
+        if len(attns) == len(moes) and len(attns) > 0:
+            pairs = list(zip(attns, moes))
+            
+    return pairs
 
-    This is useful if you hook *before* softmax in the attention implementation.
-    """
+
+def _entropy_from_logits(attn_logits: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """Utility to convert attention logits to probabilities and compute entropy."""
     if mask is not None:
         attn_logits = attn_logits + mask
     attn_probs = attn_logits.softmax(dim=-1)
@@ -94,7 +127,7 @@ def calibrate_expert_entropy(
         model: HF-style MoE model (e.g., Mixtral-8x7B, DeepSeek-V2) in eval mode.
         tokenizer: corresponding tokenizer.
         calibration_prompts: small list of prompts representative of deployment.
-        num_experts: number of experts per MoE layer (for initialization).
+        num_experts: number of experts per MoE layer.
         max_new_tokens: optional generation length; set >0 to capture decode-time stats.
         device: optional device override.
 
@@ -106,78 +139,122 @@ def calibrate_expert_entropy(
     if device is not None:
         model.to(device)
 
-    # Attempt to locate MoE layers
-    moe_layers = _get_moe_layers(model)
-    if not moe_layers:
-        raise RuntimeError("No MoE layers found. Customize _get_moe_layers for your model.")
+    # Enable output_attentions in the model config during calibration
+    original_output_attentions = getattr(model.config, "output_attentions", False)
+    model.config.output_attentions = True
 
-    num_layers = len(moe_layers)
+    # Locate layers with attention and MoE blocks
+    layer_pairs = _get_layer_pairs(model)
+    if not layer_pairs:
+        # Fallback to just finding MoE layers
+        moe_layers = _get_moe_layers(model)
+        if not moe_layers:
+            raise RuntimeError("No MoE layers found. Customize model parsing.")
+        # Create dummy pairs where attention is not tracked
+        layer_pairs = [(None, moe) for moe in moe_layers]
+
+    num_layers = len(layer_pairs)
 
     # One ExpertStats per expert id
     expert_stats: Dict[int, ExpertStats] = {
         expert_id: ExpertStats(num_layers=num_layers) for expert_id in range(num_experts)
     }
 
-    # Hooks to capture attention probabilities and routing decisions per expert
+    # Temporary storage to hold token attention entropy calculated in self_attn
+    # before we route to experts in the same layer
+    temp_entropy: Dict[int, torch.Tensor] = {}
+
     handles = []
+
+    def make_attn_forward_hook(layer_idx: int):
+        def hook(module, args, output):
+            # Locate the attention weights tensor (typically 4D: batch, heads, query_len, key_len)
+            attn_weights = None
+            if isinstance(output, tuple):
+                for item in output:
+                    if isinstance(item, torch.Tensor) and item.dim() == 4:
+                        attn_weights = item
+                        break
+            elif isinstance(output, torch.Tensor) and output.dim() == 4:
+                attn_weights = output
+
+            if attn_weights is not None:
+                with torch.no_grad():
+                    eps = 1e-12
+                    p = attn_weights.clamp_min(eps)
+                    # Compute entropy over keys
+                    entropy = -(p * p.log()).sum(dim=-1)  # (batch_size, num_heads, query_len)
+                    # Average across attention heads
+                    entropy_mean = entropy.mean(dim=1)  # (batch_size, query_len)
+                    temp_entropy[layer_idx] = entropy_mean.cpu()
+        return hook
 
     def make_moe_forward_hook(layer_idx: int):
         def hook(module, args, output):
-            """Assumes output contains per-expert attention or routing info.
-
-            This is intentionally abstract because HF implementations differ.
-            You will likely need to adapt this to your MoE block signature.
-            """
-            # Example sketch for Mixtral-style block:
-            # output might be (hidden_states, router_logits, attn_outputs, ...)
-            # You can inspect `output` in a debug run and adapt.
-            if not isinstance(output, tuple):
-                return
-
-            # Routing: top-k expert indices per token
-            # router_logits: (batch, seq_len, num_experts)
+            # Locate router_logits
             router_logits = None
-            attn_probs_per_expert: Optional[Tuple[torch.Tensor, ...]] = None
-
-            for tensor in output:
-                if isinstance(tensor, torch.Tensor) and tensor.dim() == 3 and tensor.size(-1) == num_experts:
-                    router_logits = tensor
-                # If the implementation exposes per-expert attention probs as a tuple/list,
-                # you can pattern match here.
+            if isinstance(output, tuple):
+                for item in output:
+                    if isinstance(item, torch.Tensor) and item.size(-1) == num_experts:
+                        router_logits = item
+                        break
+            elif isinstance(output, torch.Tensor) and output.size(-1) == num_experts:
+                router_logits = output
 
             if router_logits is None:
                 return
 
-            # Compute routing decisions and counts
-            # (batch, seq_len, top_k)
-            top_experts = router_logits.topk(k=2, dim=-1).indices  # example: top-2 routing
-            bsz, seqlen, topk = top_experts.shape
+            with torch.no_grad():
+                # Extract batch_size and seq_len from the input hidden states (args[0])
+                hidden_states = args[0]
+                batch_size = hidden_states.shape[0]
+                seq_len = hidden_states.shape[1]
 
-            # Count how many tokens each expert gets
-            for b in range(bsz):
-                for t in range(seqlen):
-                    for k in range(topk):
-                        expert_id = int(top_experts[b, t, k])
-                        expert_stats[expert_id].update_routing(num_tokens=1)
+                # Reshape router_logits if batch/sequence dimensions are flattened (2D)
+                if router_logits.dim() == 2:
+                    router_logits = router_logits.view(batch_size, seq_len, -1)
 
-            # TODO: attach attention probability capture here once you identify
-            # where per-expert attention weights live in the module.
+                topk = min(2, num_experts)
+                top_experts = router_logits.topk(k=topk, dim=-1).indices  # (batch_size, seq_len, topk)
 
+                # Get token attention entropies for this layer
+                layer_entropy = temp_entropy.get(layer_idx, None)
+
+                # Assign token entropies to the selected experts
+                for expert_id in range(num_experts):
+                    # Mask indicating if expert_id is among topk experts for each token
+                    selected_mask = (top_experts == expert_id).any(dim=-1)  # (batch_size, seq_len)
+                    num_tokens = selected_mask.sum().item()
+                    if num_tokens > 0:
+                        expert_stats[expert_id].update_routing(num_tokens)
+                        if layer_entropy is not None:
+                            # Index layer_entropy to get entropy for only the selected tokens
+                            token_entropies = layer_entropy[selected_mask]
+                            expert_stats[expert_id].update_token_entropies(layer_idx, token_entropies)
         return hook
 
-    for layer_idx, moe in enumerate(moe_layers):
-        handles.append(moe.register_forward_hook(make_moe_forward_hook(layer_idx)))
+    # Register hooks on attention and MoE blocks
+    for layer_idx, (attn, moe) in enumerate(layer_pairs):
+        if attn is not None:
+            handles.append(attn.register_forward_hook(make_attn_forward_hook(layer_idx)))
+        if moe is not None:
+            handles.append(moe.register_forward_hook(make_moe_forward_hook(layer_idx)))
 
     try:
         for prompt in calibration_prompts:
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+            # Clear previous sequence attention statistics
+            temp_entropy.clear()
             if max_new_tokens > 0:
-                _ = model.generate(**inputs, max_new_tokens=max_new_tokens)
+                _ = model.generate(**inputs, max_new_tokens=max_new_tokens, output_attentions=True)
             else:
-                _ = model(**inputs)
+                _ = model(**inputs, output_attentions=True)
     finally:
+        # Clean up hooks
         for h in handles:
             h.remove()
+        # Restore original configuration
+        model.config.output_attentions = original_output_attentions
 
     # Finalize stats into avg entropy + routing counts per expert
     result: Dict[int, Dict[str, torch.Tensor]] = {}
