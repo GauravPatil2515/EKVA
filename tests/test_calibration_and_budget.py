@@ -22,8 +22,8 @@ def test_expert_stats_entropy_and_finalize():
     # Entropy of uniform distribution over 4 keys: -sum(0.25*log(0.25)) = log(4)
     expected = math.log(4.0)
     assert avg_entropy.shape[0] == num_layers
-    assert torch.isclose(avg_entropy[0], torch.tensor(expected), atol=1e-5)
-    assert torch.isclose(avg_entropy[1], torch.tensor(expected), atol=1e-5)
+    assert torch.isclose(avg_entropy[0], torch.tensor(expected, dtype=torch.float64), atol=1e-5)
+    assert torch.isclose(avg_entropy[1], torch.tensor(expected, dtype=torch.float64), atol=1e-5)
 
 
 def test_derive_kv_budget_shapes_and_constraints():
