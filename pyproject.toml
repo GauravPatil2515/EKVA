@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ekva"
+version = "0.2.0"
+description = "Expert-Aware KV Budget Allocation for Sparse MoE LLM inference"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Gaurav Patil" }]
+dependencies = [
+    "torch>=2.2.0",
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+models = ["transformers>=4.40.0", "datasets>=2.18.0", "accelerate>=0.29.0"]
+kernel = ["triton>=2.3.0"]
+dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,4 +1,37 @@
+# EKVA — dependencies
+# NOTE: This file lists everything the 12-week plan needs. Do NOT pip-install
+# blindly on the 3050 laptop. Install per-phase (see docs/QUICKSTART.md).
+# Heavy deps (transformers, triton, flash-attn) are only required from the
+# phase that uses them.
+
+# ── Core (Phase 1 & 2 — runs on CPU, no GPU required) ─────────────────────
 torch>=2.2.0
-transformers
-triton>=2.3.0
-flash-attn
+numpy>=1.24.0
+matplotlib>=3.7.0
+pyyaml>=6.0
+tqdm>=4.66.0
+
+# ── Real-model calibration & eval (Weeks 1-6, needs GPU) ──────────────────
+transformers>=4.40.0
+tokenizers>=0.19.0
+datasets>=2.18.0
+accelerate>=0.29.0
+
+# ── Optional: FlashAttention-2 baseline (Weeks 4-6, 10-11) ────────────────
+# flash-attn>=2.5.0          # Linux only; install on Colab A100/H100
+
+# ── Triton kernel (Weeks 10-11 — Linux + recent GPU only) ─────────────────
+# triton>=2.3.0
+
+# ── Benchmarks (Weeks 5-6, 12) ────────────────────────────────────────────
+# LongBench, RULER, Needle-in-Haystack, InfiniteBench are pulled as datasets
+# or small harnesses; see docs/BENCHMARKS.md for the exact repos.
+#   longbench                  # pip install longbench (or git clone)
+#   ruler                      # see github.com/NVIDIA/RULER
+
+# ── Hardware profiling (Weeks 8-9, 11) ────────────────────────────────────
+# torch profiler is built into PyTorch; Nsight requires NVIDIA tools on the
+# host (ncu / nsys) — not a pip package. See docs/KERNEL.md.
+
+# ── Dev / test ────────────────────────────────────────────────────────────
+pytest>=8.0.0
