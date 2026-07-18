@@ -31,6 +31,6 @@ env/
 *.swp
 
 # ── Model weights / caches (downloaded separately, see docs/MODELS.md) ────
-models/
+/models/
 .cache/
 wandb/
