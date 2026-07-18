@@ -1,0 +1,37 @@
+# EKVA experiment matrix (the full combination grid from the 12-week plan).
+# Week scripts read their slice from here.
+
+models: [qwen1.5-moe-a2.7b, mixtral-8x7b, deepseek-moe-16b]
+
+budget_policies:
+  - uniform
+  - ekva                      # entropy-only (proportional)
+  - ekva_multi_signal         # entropy + routing + specialization (Week 7)
+  - random
+  - snapkv_style
+  - pyramidkv_style
+  - dynamickv_style
+
+eviction_strategies: [recency, attention, random, hybrid]
+
+budget_fractions: [0.1, 0.2, 0.3, 0.4, 0.6, 0.8]
+
+total_budget_tokens: 4096   # FullKV reference per expert (adjust per model)
+
+kernel_variants:
+  - baseline_fa2
+  - ekva_triton_v1            # variable tile
+  - ekva_triton_v2            # + fused eviction
+
+# Week -> what it maps to (documentation only; the scripts encode the logic)
+week_plan:
+  "1-2": calibration_real_models
+  "3":   correlation_sensitivity
+  "4":   wire_kv_hook
+  "5-6": benchmark_sweep
+  "7":   multisignal_upgrade
+  "8":   roofline_instrument
+  "9":   roofline_plots
+  "10":  kernel_v1
+  "11":  kernel_v2
+  "12":  end_to_end

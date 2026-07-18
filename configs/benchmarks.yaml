@@ -1,0 +1,21 @@
+# EKVA benchmark configuration (Weeks 5-6, 12).
+benchmarks:
+  longbench:
+    subset: [single_doc_qa, multi_doc_qa, summarization, few_shot, synthetic, code]
+    metric: f1
+    repo: "https://github.com/THUDM/LongBench"
+  ruler:
+    tasks: [niah_single_1, niah_multi_2, niah_multi_3, retrieval, aggregation, copy_first]
+    repo: "https://github.com/NVIDIA/RULER"
+  needle:
+    ctx_lengths: [4096, 8192, 16384, 32768]
+    depths: [0.1, 0.3, 0.5, 0.7, 0.9]
+  infinitebench:
+    subset: [retrieve_passkey, retrieve_number, qa_known]
+    repo: "https://github.com/OpenBMB/InfiniteBench"
+  perplexity:
+    datasets: [wikitext-103-raw-v1, c4-en]
+    max_samples: 32
+    ctx_len: 2048
+
+budget_fractions: [0.1, 0.2, 0.3, 0.4, 0.6, 0.8]

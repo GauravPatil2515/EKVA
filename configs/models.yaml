@@ -1,0 +1,46 @@
+# EKVA model registry (mirrors ekva.models.registry).
+# Edit locally to add models; the experiment scripts read this via yaml.safe_load.
+models:
+  qwen1.5-moe-a2.7b:
+    hf_id: Qwen/Qwen1.5-MoE-A2.7B
+    num_experts: 60
+    num_layers: 24
+    hidden_size: 2048
+    num_attention_heads: 16
+    head_dim: 128
+    approx_vram_gb_fp16: 5.5
+    recommended_hw: "RTX 3050 6GB (cpu offload) or Colab T4"
+    notes: "Smallest candidate; do this first (Week 1)."
+
+  mixtral-8x7b:
+    hf_id: mistralai/Mixtral-8x7B-v0.1
+    num_experts: 8
+    num_layers: 32
+    hidden_size: 4096
+    num_attention_heads: 32
+    head_dim: 128
+    approx_vram_gb_fp16: 15.0
+    recommended_hw: "Colab A100 40GB"
+    notes: "Primary results model."
+
+  deepseek-moe-16b:
+    hf_id: deepseek-ai/deepseek-moe-16b-base
+    num_experts: 64
+    num_layers: 28
+    hidden_size: 2048
+    num_attention_heads: 16
+    head_dim: 128
+    approx_vram_gb_fp16: 32.0
+    recommended_hw: "Colab A100 40GB"
+    notes: "Fallback if DeepSeek-V2 (236B) is too heavy."
+
+default_prompt_sets:
+  general:
+    - "Explain the concept of attention in transformers in simple terms."
+    - "Summarize the following article about large language models."
+  long_context:
+    - "Read the full document and answer: what are the main conclusions?"
+  code:
+    - "Write a Python function to compute the factorial of a number."
+  math:
+    - "Prove that the sum of two even integers is even."
