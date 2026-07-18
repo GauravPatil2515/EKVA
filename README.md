@@ -57,7 +57,7 @@ EKVA/
 ```bash
 cd EKVA
 python3 -m pip install -e .                 # core deps (torch, numpy, matplotlib, pyyaml)
-python3 -m pytest tests/ -q                 # 12+ tests, all CPU
+python3 -m pytest tests/ -q                 # 22 tests, all CPU
 python3 experiments/generate_mock_calibration.py --model mixtral-8x7b
 python3 experiments/plot_calibration.py --input output/mixtral-8x7b_phase1.pt
 ```

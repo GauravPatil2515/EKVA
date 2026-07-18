@@ -8,7 +8,7 @@ laptop, and a **GPU / real-model** track for the actual experiments (Weeks 1–6
 ```bash
 cd EKVA
 python3 -m pip install -e .                 # core: torch, numpy, matplotlib, pyyaml, tqdm
-python3 -m pytest tests/ -q                 # 12+ tests, all CPU-only
+python3 -m pytest tests/ -q                 # 22 tests, all CPU-only
 
 # Mock calibration (synthetic MoE, no weights):
 python3 experiments/generate_mock_calibration.py --model mixtral-8x7b

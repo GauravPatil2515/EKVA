@@ -47,6 +47,7 @@ excluding activation/KV overhead.
 ## Notes
 - The model registry (`ekva/models/registry.py`) and `configs/models.yaml` are the
   single source of truth for ids / expert counts. Update both if you add a model.
-- Weights are git-ignored (`models/` in `.gitignore`) — never commit them.
+- Weights are git-ignored (`/models/` at repo root in `.gitignore`) — never
+  commit them. Note `ekva/models/` is the code registry and IS tracked.
 - For the 3050 laptop, use `device=cpu` or `device=cuda` with `--load-in-8bit` and
   small calibration prompt sets; reserve real training/benchmark runs for Colab.
