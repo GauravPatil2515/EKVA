@@ -1,0 +1,4 @@
+-r base.txt
+-r models.txt
+-r kernel.txt
+nsight-compute  # NVIDIA Nsight Compute CLI (install via NVIDIA repo)
