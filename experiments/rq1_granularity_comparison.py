@@ -81,7 +81,10 @@ def main():
     spec = get_model_spec(args.model)
     os.makedirs(args.out_dir, exist_ok=True)
 
-    d = torch.load(args.calibration, map_location="cpu")
+    try:
+        d = torch.load(args.calibration, map_location="cpu", weights_only=False)
+    except TypeError:
+        d = torch.load(args.calibration, map_location="cpu")
     entropy_map = d["entropy_map"]
     num_experts = spec.num_experts
 

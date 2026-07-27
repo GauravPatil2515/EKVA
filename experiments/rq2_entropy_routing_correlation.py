@@ -21,7 +21,10 @@ from scipy.stats import pearsonr, spearmanr
 
 
 def load_calibration(path):
-    d = torch.load(path, map_location="cpu")
+    try:
+        d = torch.load(path, map_location="cpu", weights_only=False)
+    except TypeError:
+        d = torch.load(path, map_location="cpu")
     return d["entropy_map"]
 
 

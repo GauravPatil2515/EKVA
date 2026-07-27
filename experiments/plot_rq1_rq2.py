@@ -15,7 +15,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 def plot_rq1_granularity(results_path, out_dir="output"):
     """Plot RQ1: layer vs expert granularity comparison."""
-    results = torch.load(results_path, map_location="cpu")
+    try:
+        results = torch.load(results_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        results = torch.load(results_path, map_location="cpu")
     comparison = results.get("comparison", {})
 
     if not comparison:
@@ -68,7 +71,10 @@ def plot_rq1_granularity(results_path, out_dir="output"):
 
 def plot_rq2_correlation(results_path, out_dir="output"):
     """Plot RQ2: entropy-routing correlation per model."""
-    all_results = torch.load(results_path, map_location="cpu")
+    try:
+        all_results = torch.load(results_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        all_results = torch.load(results_path, map_location="cpu")
 
     n_models = len(all_results)
     fig, axes = plt.subplots(1, n_models, figsize=(6 * n_models, 5))
