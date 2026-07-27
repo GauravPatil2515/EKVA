@@ -44,19 +44,20 @@ def main():
         "low_cpu_mem_usage": True,
     }
     if args.device == "cuda":
-        kwargs["device_map"] = "auto"
         if args.quantize:
             from transformers import BitsAndBytesConfig
+            kwargs["device_map"] = "cuda:0"
             if args.quantize == "4bit":
                 kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_4bit=True,
-                    llm_int8_enable_fp32_cpu_offload=True
+                    bnb_4bit_compute_dtype=torch.float16,
                 )
             elif args.quantize == "8bit":
                 kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_8bit=True,
-                    llm_int8_enable_fp32_cpu_offload=True
                 )
+        else:
+            kwargs["device_map"] = "auto"
         
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
     if args.device != "cuda":
