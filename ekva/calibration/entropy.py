@@ -142,9 +142,9 @@ def calibrate_expert_entropy(
     if device is not None:
         model.to(device)
 
-    original_output_attentions = getattr(model.config, "output_attentions", False)
-    model.config.output_attentions = True
-
+    # NOTE: We do NOT set output_attentions=True on the config or in forward().
+    # The forward hooks below capture attention tensors directly from the module
+    # output, which is compatible with all attn_implementation modes (sdpa, eager, flash).
     layer_pairs = _get_layer_pairs(model)
     if not layer_pairs:
         moe_layers = _get_moe_layers(model)
@@ -220,13 +220,13 @@ def calibrate_expert_entropy(
             inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
             temp_entropy.clear()
             if max_new_tokens > 0:
-                _ = model.generate(**inputs, max_new_tokens=max_new_tokens, output_attentions=True)
+                _ = model.generate(**inputs, max_new_tokens=max_new_tokens)
             else:
-                _ = model(**inputs, output_attentions=True)
+                # Hooks capture attention weights; no need for output_attentions=True
+                _ = model(**inputs)
     finally:
         for h in handles:
             h.remove()
-        model.config.output_attentions = original_output_attentions
 
     result: Dict[int, Dict[str, torch.Tensor]] = {}
     for expert_id, stats in expert_stats.items():

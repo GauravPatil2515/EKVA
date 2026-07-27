@@ -42,8 +42,9 @@ def main():
     ap.add_argument("--total-budget", type=int, default=2048)
     ap.add_argument("--min-per-expert", type=int, default=64)
     ap.add_argument("--config", default="configs/models.yaml")
-    ap.add_argument("--quantize", choices=["4bit", "8bit"], help="Quantization (e.g., 4bit) to prevent OOM")
+    ap.add_argument("--quantize", choices=["4bit", "8bit"], help="Quantization - only effective with --device cuda")
     ap.add_argument("--out-dir", default="output")
+    ap.add_argument("--max-length", type=int, default=128, help="Max token length per prompt (reduce to save memory)")
     args = ap.parse_args()
 
     spec = get_model_spec(args.model)
@@ -52,30 +53,32 @@ def main():
 
     print(f"[W1-2] Loading {spec.hf_id} ({args.model}) on {args.device} ...")
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
-    
-    kwargs = {
-        "torch_dtype": torch.float16 if args.device == "cuda" else torch.float32,
-        "attn_implementation": "eager",
-    }
-    if args.device == "cuda":
-        if args.quantize:
-            from transformers import BitsAndBytesConfig
-            kwargs["device_map"] = "cuda:0"
-            if args.quantize == "4bit":
-                kwargs["quantization_config"] = BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_compute_dtype=torch.float16,
-                )
-            elif args.quantize == "8bit":
-                kwargs["quantization_config"] = BitsAndBytesConfig(
-                    load_in_8bit=True,
-                )
-        else:
-            kwargs["device_map"] = "auto"
-        
-    model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
-    if args.device != "cuda":
-        model = model.to(args.device)
+
+    if args.device == "cuda" and args.quantize:
+        # GPU + quantization path (requires bitsandbytes, enough VRAM for fp16 conversion ~28GB)
+        from transformers import BitsAndBytesConfig
+        bnb_cfg = BitsAndBytesConfig(
+            load_in_4bit=(args.quantize == "4bit"),
+            load_in_8bit=(args.quantize == "8bit"),
+            bnb_4bit_compute_dtype=torch.float16,
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            spec.hf_id,
+            quantization_config=bnb_cfg,
+            device_map="auto",
+            attn_implementation="eager",
+        )
+    else:
+        # CPU path: load in float32 (fits in 30GB Kaggle system RAM)
+        print("[W1-2] Loading on CPU (float32). This uses ~28GB RAM but avoids GPU VRAM limits.")
+        model = AutoModelForCausalLM.from_pretrained(
+            spec.hf_id,
+            torch_dtype=torch.float32,
+            device_map="cpu",
+            attn_implementation="eager",
+            low_cpu_mem_usage=True,
+        )
+    model.eval()
 
     for pset_name, prompts in prompt_sets.items():
         print(f"[W1-2] Calibrating prompt set '{pset_name}' ({len(prompts)} prompts) ...")
