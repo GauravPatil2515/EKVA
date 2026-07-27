@@ -51,9 +51,17 @@ def main():
 
     print(f"[W1-2] Loading {spec.hf_id} ({args.model}) on {args.device} ...")
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
-    model = AutoModelForCausalLM.from_pretrained(
-        spec.hf_id, torch_dtype=torch.float16 if args.device == "cuda" else torch.float32
-    ).to(args.device)
+    
+    # Use device_map="auto" to spread across multiple GPUs (e.g. Kaggle 2x T4)
+    # or load in 4-bit if needed.
+    kwargs = {"torch_dtype": torch.float16 if args.device == "cuda" else torch.float32}
+    if args.device == "cuda":
+        kwargs["device_map"] = "auto"
+        # kwargs["load_in_4bit"] = True  # Uncomment if still OOMing
+        
+    model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
+    if args.device != "cuda":
+        model = model.to(args.device)
 
     for pset_name, prompts in prompt_sets.items():
         print(f"[W1-2] Calibrating prompt set '{pset_name}' ({len(prompts)} prompts) ...")

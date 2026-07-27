@@ -32,23 +32,15 @@ def main():
     print(f"  VRAM estimate (fp16): ~{spec.approx_vram_gb_fp16} GB")
     print(f"  Recommended HW: {spec.recommended_hw}")
 
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-
-    kwargs = {"torch_dtype": getattr(__import__("torch"), args.dtype)}
-    if args.offload:
-        kwargs["device_map"] = "cpu"
-        kwargs["offload_folder"] = f"./models/{args.model}"
-
     print(f"  Loading tokenizer...")
+    from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
 
-    print(f"  Loading model weights (this may take a while)...")
-    model = AutoModelForCausalLM.from_pretrained(
-        spec.hf_id,
-        **kwargs,
-    )
+    print(f"  Downloading model weights (this may take a while)...")
+    from huggingface_hub import snapshot_download
+    snapshot_download(repo_id=spec.hf_id, local_dir=f"./models/{args.model}" if args.offload else None)
 
-    print(f"  Done! Model loaded on device: {next(model.parameters()).device}")
+    print(f"  Done! Model downloaded.")
     print(f"  To use in experiments:")
     print(f"    python experiments/week01_02_calibration.py --model {args.model} --device {args.device}")
 
