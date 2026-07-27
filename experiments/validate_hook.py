@@ -39,9 +39,12 @@ def main():
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
     # Use device_map="auto" when on cuda to split across available GPUs (e.g. Kaggle 2x T4).
     # bitsandbytes load_in_4bit can also be added here if needed to avoid OOM.
+    offload_dir = Path("./offload")
+    offload_dir.mkdir(exist_ok=True)
     kwargs = {
         "torch_dtype": torch.float16 if args.device == "cuda" else torch.float32,
         "low_cpu_mem_usage": True,
+        "offload_folder": str(offload_dir),
     }
     if args.device == "cuda":
         if args.quantize:

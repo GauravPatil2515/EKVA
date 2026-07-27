@@ -54,11 +54,21 @@ def main():
     print(f"[W1-2] Loading {spec.hf_id} ({args.model}) on {args.device} ...")
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
 
+    offload_dir = Path("./offload")
+    offload_dir.mkdir(exist_ok=True)
+
     kwargs = {
         "torch_dtype": torch.float16,
         "attn_implementation": "eager",
         "low_cpu_mem_usage": True,
+        "offload_folder": str(offload_dir),
     }
+
+    if args.device == "cuda" and not torch.cuda.is_available():
+        print("\n[WARNING] --device cuda specified, but NO GPU was detected in this environment!")
+        print("[WARNING] Please enable T4/A100 GPU in Colab (Runtime -> Change runtime type -> T4 GPU).")
+        print("[WARNING] Falling back to CPU with disk offloading...\n")
+        args.device = "cpu"
 
     if args.device == "cuda":
         kwargs["device_map"] = "auto"
@@ -70,7 +80,7 @@ def main():
                 bnb_4bit_compute_dtype=torch.float16,
             )
     else:
-        kwargs["device_map"] = "cpu"
+        kwargs["device_map"] = "auto"
 
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
     model.eval()
