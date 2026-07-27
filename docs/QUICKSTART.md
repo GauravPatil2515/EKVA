@@ -63,3 +63,35 @@ Don't install everything at once. `requirements.txt` is grouped:
 - Models (Weeks 1–6): `pip install transformers datasets accelerate`.
 - Kernel (Weeks 10–11): needs `triton` + CUDA GPU (Colab A100, not the 3050).
 - Benchmarks: pull LongBench / RULER / InfiniteBench per `docs/BENCHMARKS.md`.
+
+## Colab Quickstart
+
+Run EKVA on Google Colab (free T4 or A100):
+
+```bash
+# Clone and install
+git clone https://github.com/GauravPatil2515/EKVA.git
+cd EKVA
+pip install -e .
+pip install transformers datasets accelerate scipy
+
+# Run RQ1/RQ2 (CPU-only, works on free Colab T4)
+python experiments/colab/run_rq1_rq2.py
+```
+
+For A100 runs (roofline + Triton kernel):
+```bash
+# Change runtime type to GPU (A100) in Colab settings
+pip install -e ".[kernel]"
+python experiments/colab/run_rq4_roofline.py
+python experiments/colab/run_triton_kernel.py
+```
+
+### Weights Download
+```bash
+# Download Qwen1.5-MoE-A2.7B (fits RTX 3050 with cpu_offload)
+python scripts/download_weights.py --model qwen1.5-moe-a2.7b --device cpu
+
+# Download Mixtral-8x7B (needs A100)
+python scripts/download_weights.py --model mixtral-8x7b --device cuda
+```
