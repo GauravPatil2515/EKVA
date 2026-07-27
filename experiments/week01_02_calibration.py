@@ -53,7 +53,10 @@ def main():
     print(f"[W1-2] Loading {spec.hf_id} ({args.model}) on {args.device} ...")
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
     
-    kwargs = {"torch_dtype": torch.float16 if args.device == "cuda" else torch.float32}
+    kwargs = {
+        "torch_dtype": torch.float16 if args.device == "cuda" else torch.float32,
+        "attn_implementation": "eager",
+    }
     if args.device == "cuda":
         kwargs["device_map"] = "auto"
         if args.quantize:
