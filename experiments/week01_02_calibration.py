@@ -42,6 +42,7 @@ def main():
     ap.add_argument("--total-budget", type=int, default=2048)
     ap.add_argument("--min-per-expert", type=int, default=64)
     ap.add_argument("--config", default="configs/models.yaml")
+    ap.add_argument("--quantize", choices=["4bit", "8bit"], help="Quantization (e.g., 4bit) to prevent OOM")
     ap.add_argument("--out-dir", default="output")
     args = ap.parse_args()
 
@@ -52,12 +53,13 @@ def main():
     print(f"[W1-2] Loading {spec.hf_id} ({args.model}) on {args.device} ...")
     tok = AutoTokenizer.from_pretrained(spec.hf_id)
     
-    # Use device_map="auto" to spread across multiple GPUs (e.g. Kaggle 2x T4)
-    # or load in 4-bit if needed.
     kwargs = {"torch_dtype": torch.float16 if args.device == "cuda" else torch.float32}
     if args.device == "cuda":
         kwargs["device_map"] = "auto"
-        # kwargs["load_in_4bit"] = True  # Uncomment if still OOMing
+        if args.quantize == "4bit":
+            kwargs["load_in_4bit"] = True
+        elif args.quantize == "8bit":
+            kwargs["load_in_8bit"] = True
         
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
     if args.device != "cuda":

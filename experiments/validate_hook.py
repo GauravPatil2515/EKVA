@@ -28,6 +28,7 @@ def main():
     ap.add_argument("--model", required=True)
     ap.add_argument("--calibration", required=True)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--quantize", choices=["4bit", "8bit"], help="Quantization (e.g., 4bit) to prevent OOM")
     ap.add_argument("--out-dir", default="output/week04")
     args = ap.parse_args()
 
@@ -44,6 +45,10 @@ def main():
     }
     if args.device == "cuda":
         kwargs["device_map"] = "auto"
+        if args.quantize == "4bit":
+            kwargs["load_in_4bit"] = True
+        elif args.quantize == "8bit":
+            kwargs["load_in_8bit"] = True
         
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
     if args.device != "cuda":
