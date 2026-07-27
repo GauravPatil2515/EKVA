@@ -48,9 +48,15 @@ def main():
         if args.quantize:
             from transformers import BitsAndBytesConfig
             if args.quantize == "4bit":
-                kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
+                kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    llm_int8_enable_fp32_cpu_offload=True
+                )
             elif args.quantize == "8bit":
-                kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_8bit=True,
+                    llm_int8_enable_fp32_cpu_offload=True
+                )
         
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **kwargs)
     if args.device != "cuda":
