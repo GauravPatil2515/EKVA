@@ -58,3 +58,34 @@ def test_hook_api_no_model():
     hook = EKVACacheHook(Stub(), {0: 64, 1: 128}, num_experts=2, eviction="attention")
     assert set(hook.buffers) == {0, 1}
     assert hook.buffers[0].budget == 64 and hook.buffers[1].budget == 128
+
+
+def test_dynamic_recalibration_manager():
+    from ekva.simulator.dynamic_recalibration import DynamicKVRecalibrationManager
+
+    mgr = DynamicKVRecalibrationManager(
+        num_experts=4,
+        total_budget=512,
+        min_per_expert=64,
+        recalibration_interval=10,
+        head_dim=16,
+        num_heads=1,
+        eviction="recency",
+    )
+    assert len(mgr.buffers) == 4
+    assert sum(mgr.current_budgets.values()) == 512
+
+    # Stream 25 tokens
+    for t in range(25):
+        expert_id = t % 4
+        k = torch.randn(1, 1, 16)
+        v = torch.randn(1, 1, 16)
+        attn = torch.softmax(torch.randn(1, 1, 4), dim=-1)
+        kb, vb = mgr.record_step(expert_id, k, v, attn_probs=attn)
+        assert kb is not None and vb is not None
+
+    summary = mgr.get_summary()
+    assert summary["total_tokens_processed"] == 25
+    assert summary["recalibrations_performed"] == 2  # at t=10 and t=20
+    assert sum(summary["final_budgets"].values()) == 512
+

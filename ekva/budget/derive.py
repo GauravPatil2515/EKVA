@@ -24,14 +24,20 @@ def _importance_scores(
         stats = entropy_map[eid]
         avg_entropy = stats["avg_entropy"]  # [L]
         routing = stats["routing_count"].float().clamp_min(1.0)
+        ent_mean = avg_entropy.mean().clamp_min(1e-6)
+        route_log = routing.log().clamp_min(1e-6)
+        spec_val = specialization[eid] if (specialization is not None and eid < len(specialization)) else torch.tensor(0.0)
 
-        if strategy == "proportional":
-            score = avg_entropy.mean() * routing.log()
+        if strategy == "entropy_only":
+            score = ent_mean
+        elif strategy == "routing_only":
+            score = route_log
+        elif strategy == "specialization_only":
+            score = 1.0 + spec_val
+        elif strategy == "proportional":
+            score = ent_mean * route_log
         elif strategy == "multi_signal":
-            ent_w = avg_entropy.mean()
-            route_w = routing.log()
-            spec_w = specialization[eid] if specialization is not None else torch.tensor(1.0)
-            score = ent_w * route_w * (1.0 + spec_w)
+            score = ent_mean * route_log * (1.0 + spec_val)
         else:
             raise ValueError(f"Unknown strategy: {strategy}")
         importance.append(score)

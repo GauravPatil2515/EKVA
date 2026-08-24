@@ -102,7 +102,7 @@ def main():
                "Write a factorial function.", "Prove even+even is even."]
     emap = calibrate_expert_entropy(model=model, tokenizer=_Tok(), calibration_prompts=prompts,
                                     num_experts=spec.num_experts)
-    budget = derive_kv_budget(emap, total_budget=2048, strategy="proportional")
+    budget = derive_kv_budget(emap, total_budget=4096, strategy="proportional")
     out = Path(args.out_dir) / f"{args.model}_phase1.pt"
     torch.save({"entropy_map": emap, "budget_tensor": budget,
                 "meta": {"model": args.model, "mock": True}}, out)

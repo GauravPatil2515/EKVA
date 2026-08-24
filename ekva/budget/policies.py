@@ -154,12 +154,110 @@ class DynamicKVStylePolicy(BasePolicy):
         return {i: per_expert for i in range(num_experts)}
 
 
+class EKVAEntropyOnlyPolicy(BasePolicy):
+    """Ablation: allocate budget using only attention entropy (ignoring routing & specialization)."""
+    name = "ekva_entropy_only"
+
+    def allocate(self, num_experts, total_budget, entropy_map=None, min_per_expert=64, **kwargs):
+        if entropy_map is None:
+            raise ValueError("EKVAEntropyOnlyPolicy requires entropy_map.")
+        budget_tensor = derive_kv_budget(
+            entropy_map=entropy_map, total_budget=total_budget,
+            min_per_expert=min_per_expert, strategy="entropy_only",
+        )
+        return {i: int(budget_tensor[i].item()) for i in range(num_experts)}
+
+
+class EKVARoutingOnlyPolicy(BasePolicy):
+    """Ablation: allocate budget using only routing frequency (ignoring entropy & specialization)."""
+    name = "ekva_routing_only"
+
+    def allocate(self, num_experts, total_budget, entropy_map=None, min_per_expert=64, **kwargs):
+        if entropy_map is None:
+            raise ValueError("EKVARoutingOnlyPolicy requires entropy_map.")
+        budget_tensor = derive_kv_budget(
+            entropy_map=entropy_map, total_budget=total_budget,
+            min_per_expert=min_per_expert, strategy="routing_only",
+        )
+        return {i: int(budget_tensor[i].item()) for i in range(num_experts)}
+
+
+class EKVASpecializationOnlyPolicy(BasePolicy):
+    """Ablation: allocate budget using only specialization score."""
+    name = "ekva_specialization_only"
+
+    def allocate(
+        self, num_experts, total_budget, entropy_map=None, min_per_expert=64,
+        specialization: Optional[torch.Tensor] = None, **kwargs,
+    ):
+        if entropy_map is None:
+            raise ValueError("EKVASpecializationOnlyPolicy requires entropy_map.")
+        budget_tensor = derive_kv_budget(
+            entropy_map=entropy_map, total_budget=total_budget,
+            min_per_expert=min_per_expert, strategy="specialization_only",
+            specialization=specialization,
+        )
+        return {i: int(budget_tensor[i].item()) for i in range(num_experts)}
+
+
+class CakeLayerAggregatedPolicy(BasePolicy):
+    """CAKE-style Layer-Aggregated baseline (RQ1):
+    Averages attention entropy across experts within each layer,
+    allocates budget per layer proportional to layer entropy,
+    and then distributes each layer's budget equally across its experts.
+    """
+    name = "cake_layer_aggregated"
+
+    def allocate(self, num_experts, total_budget, entropy_map=None, min_per_expert=64, **kwargs):
+        if entropy_map is None:
+            raise ValueError("CakeLayerAggregatedPolicy requires entropy_map.")
+
+        num_layers = max(e["avg_entropy"].shape[0] for e in entropy_map.values())
+        layer_entropy = torch.zeros(num_layers, dtype=torch.float64)
+        for eid, stats in entropy_map.items():
+            layer_entropy += stats["avg_entropy"].double()
+        layer_entropy /= max(1, len(entropy_map))
+        layer_entropy = layer_entropy.clamp_min(1e-6)
+
+        norm = layer_entropy / layer_entropy.sum()
+        layer_budgets = (norm * float(total_budget)).round().long().clamp(min=min_per_expert)
+
+        diff = int(total_budget - layer_budgets.sum().item())
+        sign = 1 if diff > 0 else -1
+        idx = 0
+        while diff != 0 and 0 <= idx < num_layers:
+            layer_budgets[idx] = max(min_per_expert, layer_budgets[idx] + sign)
+            diff -= sign
+            idx = (idx + 1) % num_layers
+
+        expert_budgets = {}
+        experts_per_layer = max(1, num_experts // num_layers)
+        for eid in range(num_experts):
+            layer_idx = eid % num_layers
+            expert_budgets[eid] = max(min_per_expert, int(layer_budgets[layer_idx].item() // experts_per_layer))
+
+        tot = sum(expert_budgets.values())
+        diff = total_budget - tot
+        sign = 1 if diff > 0 else -1
+        idx = 0
+        while diff != 0 and 0 <= idx < num_experts:
+            expert_budgets[idx] = max(min_per_expert, expert_budgets[idx] + sign)
+            diff -= sign
+            idx = (idx + 1) % num_experts
+
+        return expert_budgets
+
+
 POLICY_REGISTRY: Dict[str, type] = {
     p.name: p
     for p in (
         UniformPolicy,
         EKVAPolicy,
         EKVAMultiSignalPolicy,
+        EKVAEntropyOnlyPolicy,
+        EKVARoutingOnlyPolicy,
+        EKVASpecializationOnlyPolicy,
+        CakeLayerAggregatedPolicy,
         RandomPolicy,
         SnapKVStylePolicy,
         PyramidKVStylePolicy,
