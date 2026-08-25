@@ -1,0 +1,82 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{dao2023flashattention2,xiao2023streamingllm}
+\citation{xiao2023streamingllm}
+\citation{zhang2023h2o}
+\citation{li2024snapkv}
+\@writefile{toc}{\contentsline {title}{Expert, Not Layer: Where Sparse-MoE KV Cache Budgets Should Actually Go}{1}{chapter.1}\protected@file@percent }
+\@writefile{toc}{\authcount {1}}
+\@writefile{toc}{\contentsline {author}{Gaurav Patil}{1}{chapter.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1.1}\protected@file@percent }
+\citation{feng2025adakv}
+\citation{cake2025}
+\citation{zhang2024pyramidkv}
+\citation{lin2026infokv}
+\citation{jiang2024mixtral,bai2024qwenmoe,dai2024deepseekmoe}
+\citation{lin2026infokv}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Mechanistic analysis of per-expert attention entropy vs. routing frequency across layers in sparse MoE models. Auxiliary load-balancing losses decouple routing frequency from attention entropy, necessitating a multi-signal formulation.}}{2}{figure.1.1}\protected@file@percent }
+\newlabel{fig:motivation}{{1}{2}{Mechanistic analysis of per-expert attention entropy vs. routing frequency across layers in sparse MoE models. Auxiliary load-balancing losses decouple routing frequency from attention entropy, necessitating a multi-signal formulation}{figure.1.1}{}}
+\citation{li2024snapkv}
+\citation{zhang2023h2o}
+\citation{xiao2023streamingllm}
+\citation{feng2025adakv}
+\citation{cake2025}
+\citation{lin2026infokv}
+\citation{liu2025pikv}
+\citation{sun2026moend}
+\citation{balashov2026triroute}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}KV Cache Compression Granularity}{3}{subsection.1.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Distinction from Prior MoE Literature}{3}{subsection.1.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Methodology}{3}{section.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Multi-Signal Expert Calibration}{3}{subsection.1.3.1}\protected@file@percent }
+\newlabel{eq:score}{{4}{4}{Multi-Signal Expert Calibration}{equation.1.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Constrained Budget Allocation with Starvation Prevention}{4}{subsection.1.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Dynamic Online Re-Calibration Cascade}{4}{subsection.1.3.3}\protected@file@percent }
+\citation{bai2024qwenmoe}
+\citation{dai2024deepseekmoe}
+\citation{jiang2024mixtral}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textbf  {RQ1 Main Result \& Component Ablation.} (Left Panels) Retained quality vs. KV budget fraction across Qwen1.5-MoE (60 exp), DeepSeek-MoE (64 exp), and Mixtral-8x7B (8 exp). (Right Panel) Component ablation on Qwen1.5-MoE at 40\% budget.}}{5}{figure.1.2}\protected@file@percent }
+\newlabel{fig:rq1}{{2}{5}{\textbf {RQ1 Main Result \& Component Ablation.} (Left Panels) Retained quality vs. KV budget fraction across Qwen1.5-MoE (60 exp), DeepSeek-MoE (64 exp), and Mixtral-8x7B (8 exp). (Right Panel) Component ablation on Qwen1.5-MoE at 40\% budget}{figure.1.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Variable-Tile Triton Kernel}{5}{subsection.1.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Empirical Evaluation}{5}{section.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental Setup}{5}{subsection.1.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}RQ1: Expert vs. Layer Granularity Ablation}{5}{subsection.1.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Component Ablation Study}{5}{subsection.1.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces RQ1 Granularity Comparison: Retained Quality (\%) under tight (20\%) and moderate (40\%) KV budget constraints across three sparse MoE architectures.}}{6}{table.1.1}\protected@file@percent }
+\newlabel{tab:rq1}{{1}{6}{RQ1 Granularity Comparison: Retained Quality (\%) under tight (20\%) and moderate (40\%) KV budget constraints across three sparse MoE architectures}{table.1.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Multi-Signal Policy Component Ablation on Qwen1.5-MoE at 40\% KV budget.}}{6}{table.1.2}\protected@file@percent }
+\newlabel{tab:ablation}{{2}{6}{Multi-Signal Policy Component Ablation on Qwen1.5-MoE at 40\% KV budget}{table.1.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}RQ2: Mechanistic Decoupling in MoE Architectures}{6}{subsection.1.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}RQ3: Domain Transferability \& Reasoning Stability}{6}{subsection.1.4.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {RQ3 Results.} (Left) 4$\times $4 Cross-domain transfer matrix (General Text, Code, Math, Long QA). (Right) Mathematical reasoning retention curve vs. layer-destabilized CAKE.}}{7}{figure.1.3}\protected@file@percent }
+\newlabel{fig:rq3}{{3}{7}{\textbf {RQ3 Results.} (Left) 4$\times $4 Cross-domain transfer matrix (General Text, Code, Math, Long QA). (Right) Mathematical reasoning retention curve vs. layer-destabilized CAKE}{figure.1.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Mathematical Reasoning Stability vs. Layer-Aggregated CAKE at 40\% KV budget.}}{7}{table.1.3}\protected@file@percent }
+\newlabel{tab:reasoning}{{3}{7}{Mathematical Reasoning Stability vs. Layer-Aggregated CAKE at 40\% KV budget}{table.1.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Dynamic Streaming Online Recalibration}{7}{subsection.1.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}RQ4: Systems Validation \& Roofline Analysis}{7}{subsection.1.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion and Limitations}{7}{section.1.5}\protected@file@percent }
+\bibstyle{splncs04}
+\bibdata{references}
+\bibcite{bai2024qwenmoe}{1}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Dynamic Recalibration Cascade.} Streaming timeline across 2048 tokens undergoing 4 domain shifts. Dynamic EKVA maintains an average retained quality of 80.56\% vs. 76.01\% for uniform and 77.71\% for static EKVA.}}{8}{figure.1.4}\protected@file@percent }
+\newlabel{fig:dynamic}{{4}{8}{\textbf {Dynamic Recalibration Cascade.} Streaming timeline across 2048 tokens undergoing 4 domain shifts. Dynamic EKVA maintains an average retained quality of 80.56\% vs. 76.01\% for uniform and 77.71\% for static EKVA}{figure.1.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{8}{section.1.6}\protected@file@percent }
+\bibcite{balashov2026triroute}{2}
+\bibcite{cake2025}{3}
+\bibcite{dai2024deepseekmoe}{4}
+\bibcite{dao2023flashattention2}{5}
+\bibcite{feng2025adakv}{6}
+\bibcite{jiang2024mixtral}{7}
+\bibcite{li2024snapkv}{8}
+\bibcite{lin2026infokv}{9}
+\bibcite{liu2025pikv}{10}
+\bibcite{sun2026moend}{11}
+\bibcite{xiao2023streamingllm}{12}
+\bibcite{zhang2024pyramidkv}{13}
+\bibcite{zhang2023h2o}{14}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Analytical Hardware Roofline.} (Left) NVIDIA A100 roofline model placing decode attention deeply in the memory-bound regime ($\text  {AI} \approx 1.0$). (Right) Projected Triton FlashAttention-2 decode speedup across reduced KV budgets.}}{9}{figure.1.5}\protected@file@percent }
+\newlabel{fig:roofline}{{5}{9}{\textbf {Analytical Hardware Roofline.} (Left) NVIDIA A100 roofline model placing decode attention deeply in the memory-bound regime ($\text {AI} \approx 1.0$). (Right) Projected Triton FlashAttention-2 decode speedup across reduced KV budgets}{figure.1.5}{}}
+\gdef \@abspage@last{10}

@@ -1,0 +1,71 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{bai2024qwenmoe}
+Bai, J., et~al.: Qwen1.5-moe: Matching dense capabilities with sparse
+  mixture-of-experts. arXiv preprint arXiv:2403.18731  (2024)
+
+\bibitem{balashov2026triroute}
+Balashov, D., Ponomarova, A.: Triroute: Joint learning of attention, routing,
+  and cache quantization for moe. arXiv preprint arXiv:2607.06601  (2026)
+
+\bibitem{cake2025}
+Chen, A., et~al.: Cake: Layer-wise attention-entropy kv cache allocation for
+  large language models. arXiv preprint arXiv:2502.04189  (2025)
+
+\bibitem{dai2024deepseekmoe}
+Dai, D., et~al.: Deepseek-moe: Towards ultimate expertise in mixture-of-experts
+  language models. arXiv preprint arXiv:2401.06066  (2024)
+
+\bibitem{dao2023flashattention2}
+Dao, T.: Flashattention-2: Faster attention with better parallelism and work
+  partitioning. In: International Conference on Learning Representations (ICLR)
+  (2024)
+
+\bibitem{feng2025adakv}
+Feng, Z., et~al.: Ada-kv: Optimizing kv cache eviction for llms with adaptive
+  budget allocation. In: Advances in Neural Information Processing Systems
+  (NeurIPS) (2025)
+
+\bibitem{jiang2024mixtral}
+Jiang, A.Q., Sablayrolles, A., Roux, A., Mensch, A., Savary, B., Bamford, C.,
+  Chaplot, D.S., Casas, D.d.l., Hanna, E.B., Bressand, F., et~al.: Mixtral of
+  experts. arXiv preprint arXiv:2401.04088  (2024)
+
+\bibitem{li2024snapkv}
+Li, Y., Huang, Y., Yang, B., Venkitesh, B., Avestimehr, S., Annavaram, M.:
+  Snapkv: Llm knows what you are looking for before generation. arXiv preprint
+  arXiv:2404.14469  (2024)
+
+\bibitem{lin2026infokv}
+Lin, Z., et~al.: Infokv: Information-aware key-value cache compression for
+  long-context llms. arXiv preprint arXiv:2606.26875  (2026)
+
+\bibitem{liu2025pikv}
+Liu, R., et~al.: Pikv: Parallel and efficient kv cache serving for
+  mixture-of-experts models. In: ICML Workshop on Efficient Systems for
+  Foundation Models (ES-FoMo III) (2025)
+
+\bibitem{sun2026moend}
+Sun, H., et~al.: Moe-nd: Multi-dimensional kv cache compression via routing
+  metaphor. arXiv preprint arXiv:2604.17695  (2026)
+
+\bibitem{xiao2023streamingllm}
+Xiao, G., Tian, Y., Chen, B., Han, S., Lewis, M.: Efficient streaming language
+  models with attention sinks. In: International Conference on Learning
+  Representations (ICLR) (2024)
+
+\bibitem{zhang2024pyramidkv}
+Zhang, Y., Wang, Z., Du, J., Zhang, M., Zhao, J.: Pyramidkv: Dynamic kv cache
+  compression based on pyramidal information funneling. arXiv preprint
+  arXiv:2406.02069  (2024)
+
+\bibitem{zhang2023h2o}
+Zhang, Z., Sheng, Y., Zhou, T., Chen, T., Zheng, L., Cai, R., Song, Z., Tian,
+  Y., R{\'e}, C., Barrett, C., Wang, Z., Chen, B.: H2o: Heavy-hitter oracle for
+  efficient generative inference of large language models. In: Advances in
+  Neural Information Processing Systems (NeurIPS). vol.~36 (2023)
+
+\end{thebibliography}
