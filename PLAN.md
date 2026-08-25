@@ -1,13 +1,9 @@
-# EKVA — Reframed 12-Week Research Plan (Empirical Characterization)
+# EKVA — Research Plan & Publication Execution Roadmap
 
-> **Framing:** This is an empirical characterization and systems validation project,
-> not a novel-method paper. The contribution is answering open questions about how
-> entropy-based KV budgeting behaves in sparse MoE models across architectures,
-> granularities, and hardware regimes. See `docs/RESEARCH.md` for the full
-> prior-work analysis and RQ justification.
+> **Status (August 2026):** Empirical characterization complete across all 4 RQs (RQ1 Granularity, RQ2 Mechanistic Decoupling, RQ3 Transferability & Reasoning, RQ4 Systems/Roofline). 25 unit tests passing. Publication target locked to **ICISEA 2026 (MULTINOVA 2.0)** with **Atlantis Press / Springer Nature (AISR)**.
+> **Submission Deadline:** **10th September 2026** (16 days remaining). See `docs/PUBLICATION_PLAN.md` for the complete day-by-day authoring and submission schedule.
 
-This is the working plan for the EKVA paper. Every week maps to cells in the
-master matrix below. Fallback branches are baked in at each decision point.
+This document tracks both the completed empirical matrix and the remaining publication workflow.
 
 ## Master Combination Matrix
 
@@ -126,14 +122,14 @@ budgeting beat layer-level budgeting at equal total budget?
 
 ---
 
-## Fallback branches (if a phase fails)
+## Publication Sprint Plan (Target: ICISEA 2026 / Atlantis Press — Sept 10, 2026)
 
-| Failure | Fallback |
-|---|---|
-| RQ1 shows no granularity advantage (W1-2) | Pivot paper to "when does expert-level granularity matter" — the negative result is publishable. |
-| Entropy signal weak (W3) | Switch primary signal to routing-frequency / combined multi-signal (W7 reserved). |
-| EKVA doesn't beat Uniform (W6) | Hybrid of PyramidKV layer curve + EKVA expert allocation (novel on its own). |
-| Experts don't roofline-separate (W9) | Reframe as "algorithmic KV allocation for MoE"; drop strongest hardware claim. |
-| Triton kernel too hard (W10–11) | Report software-simulator results only; describe kernel as "proposed implementation." |
+| Milestone | Window | Key Tasks | Output / Deliverable |
+| :--- | :---: | :--- | :--- |
+| **Phase 1: Manuscript Drafting** | Aug 26 – Aug 30 | Write Abstract, Intro, Related Work, Method (Equations, Algorithms), and RQs 1–4. | Complete first draft text. |
+| **Phase 2: Figures & Tables** | Aug 31 – Sept 02 | Typeset in Springer Nature / Atlantis Press LaTeX template; embed 5 figures from `output/`. | Compiled formatted draft. |
+| **Phase 3: Review & Polish** | Sept 03 – Sept 05 | Rigorous literature audit (PiKV, MoE-nD disambiguation); verify formulas and tables. | Polished camera-ready candidate. |
+| **Phase 4: Submission** | Sept 06 – Sept 09 | Final author metadata, track selection (Track 1 / 4), and upload to Springer Meteor portal. | Submitted PDF confirmation. |
 
-Implemented in `experiments/fallback_branches.py`.
+For detailed task checklists and required resources, see [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md).
+
