@@ -19,6 +19,7 @@ class ModelSpec:
     head_dim: int
     approx_vram_gb_fp16: float
     recommended_hw: str
+    top_k: int = 2
     notes: str = ""
 
     @property
@@ -38,6 +39,7 @@ MODEL_REGISTRY: Dict[str, ModelSpec] = {
         head_dim=128,
         approx_vram_gb_fp16=5.5,
         recommended_hw="RTX 3050 6GB (cpu offload) or Colab T4",
+        top_k=4,
         notes="Smallest candidate; fits the 3050. Do this first (Week 1).",
     ),
     "mixtral-8x7b": ModelSpec(
@@ -50,6 +52,7 @@ MODEL_REGISTRY: Dict[str, ModelSpec] = {
         head_dim=128,
         approx_vram_gb_fp16=15.0,
         recommended_hw="Colab A100 40GB",
+        top_k=2,
         notes="Standard 8-expert sparse MoE; primary results model.",
     ),
     "deepseek-moe-16b": ModelSpec(
@@ -62,6 +65,7 @@ MODEL_REGISTRY: Dict[str, ModelSpec] = {
         head_dim=128,
         approx_vram_gb_fp16=32.0,
         recommended_hw="Colab A100 40GB",
+        top_k=6,
         notes="Falls back to this if DeepSeek-V2 (236B) is too heavy.",
     ),
 }
