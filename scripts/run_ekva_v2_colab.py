@@ -9,6 +9,11 @@ import os
 import sys
 import subprocess
 
+# Ensure repo root is always first in sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
 def main():
     parser = argparse.ArgumentParser(description="EKVA v2 Colab / Cloud GPU Runner")
     parser.add_argument("--model", default="qwen1.5-moe-a2.7b", help="Target MoE model")
@@ -22,7 +27,7 @@ def main():
 
     # 1. Run unit test suite
     print("\n[Step 1/3] Running test suite...")
-    res = subprocess.run(["pytest", "tests/", "-v"], capture_output=False)
+    res = subprocess.run([sys.executable, "-m", "pytest", "tests/", "-v"], cwd=REPO_ROOT, capture_output=False)
     if res.returncode != 0:
         print("❌ Test suite failed. Fix errors before running benchmark.")
         sys.exit(1)
@@ -31,12 +36,18 @@ def main():
     # 2. Run master evaluation harness
     print("\n[Step 2/3] Running master evaluation suite...")
     models = ["qwen1.5-moe-a2.7b", "mixtral-8x7b", "deepseek-moe-16b"] if args.all_models else [args.model]
-    from scripts.run_ekva_v2_experiments import run_full_evaluation_pipeline
+    try:
+        from scripts.run_ekva_v2_experiments import run_full_evaluation_pipeline
+    except ImportError:
+        from run_ekva_v2_experiments import run_full_evaluation_pipeline
     results = run_full_evaluation_pipeline(models=models, out_dir=args.out_dir)
 
     # 3. Run systems latency & roofline model
     print("\n[Step 3/3] Running analytical systems roofline model...")
-    from experiments.analytical_roofline_model import run_roofline_experiment
+    try:
+        from experiments.analytical_roofline_model import run_roofline_experiment
+    except ImportError:
+        from analytical_roofline_model import run_roofline_experiment
     run_roofline_experiment(models=models, out_dir=args.out_dir)
 
     print("\n" + "=" * 70)
