@@ -298,7 +298,10 @@ def run_real_evaluation(
     print("📥 Loading Tokenizer and Model Weights...")
     tokenizer = AutoTokenizer.from_pretrained(spec.hf_id, trust_remote_code=True)
 
-    load_kwargs = {"trust_remote_code": True}
+    load_kwargs = {
+        "trust_remote_code": True,
+        "low_cpu_mem_usage": True,
+    }
     if device == "cuda":
         if use_4bit:
             load_kwargs["load_in_4bit"] = True
@@ -306,6 +309,16 @@ def run_real_evaluation(
         else:
             load_kwargs["torch_dtype"] = torch.float16
             load_kwargs["device_map"] = "auto"
+    else:
+        print("\n" + "!" * 75)
+        print("⚠️  WARNING: PyTorch detected CPU mode (CUDA not available).")
+        print("   If you are on Google Colab, enable the FREE GPU:")
+        print("   1. Click 'Runtime' menu -> 'Change runtime type'")
+        print("   2. Select 'T4 GPU' -> Click 'Save'")
+        print("   3. Re-run this cell for 10x-50x faster GPU execution!")
+        print("!" * 75 + "\n")
+        load_kwargs["torch_dtype"] = torch.float16
+        load_kwargs["device_map"] = "cpu"
 
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **load_kwargs)
     model.eval()
