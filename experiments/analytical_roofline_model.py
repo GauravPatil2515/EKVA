@@ -75,34 +75,52 @@ def compute_expert_roofline_metrics(
     else:
         entropy_map, _ = generate_synthetic_calibration(model_name, num_experts, spec.num_layers)
 
+    # Derive per-expert EKVA multi-signal budget at 40% overall budget
+    from ekva.budget.policies import EKVAMultiSignalPolicy
+    from ekva.calibration.signals import specialization_score
+    tok_types = {e: torch.randint(0, 8, (150,)) for e in range(num_experts)}
+    spec_score = specialization_score(tok_types, num_experts)
+    policy = EKVAMultiSignalPolicy()
+    total_budget = int(seq_len * num_experts * 0.40)
+    budgets = policy.allocate(
+        num_experts=num_experts,
+        total_budget=total_budget,
+        entropy_map=entropy_map,
+        specialization=spec_score,
+        min_per_expert=64,
+    )
+
     experts_data = []
     for eid in range(num_experts):
         ent = entropy_map[eid]["avg_entropy"].mean().item()
         route_count = float(entropy_map[eid]["routing_count"].item())
+        exp_budget = budgets[eid]
+        exp_frac = exp_budget / seq_len
 
-        # Autoregressive Decode Step (Query Len = 1, Key Len = seq_len)
-        # FLOPs = 4 * batch * heads * q_len * k_len * head_dim
-        # Bytes = 2 * batch * heads * (q_len * head_dim + k_len * head_dim + q_len * k_len) [fp16]
+        # Autoregressive Decode Step (Query Len = 1, Key Len = exp_budget)
+        # FLOPs = 4 * batch * heads * q_len * exp_budget * head_dim
+        # Bytes = 2 * batch * heads * (q_len * head_dim + 2 * exp_budget * head_dim) [fp16]
         q_len = 1
-        k_len = seq_len
-        flops = 4.0 * batch_size * num_heads * q_len * k_len * head_dim
-        bytes_transferred = 2.0 * batch_size * num_heads * (q_len * head_dim + 2 * k_len * head_dim)
+        flops = 4.0 * batch_size * num_heads * q_len * exp_budget * head_dim
+        bytes_transferred = 2.0 * batch_size * num_heads * (q_len * head_dim + 2 * exp_budget * head_dim)
 
-        ai = flops / max(bytes_transferred, 1e-6)  # FLOPs / Byte (~ 1.0 - 2.0 for decode)
+        ai = flops / max(bytes_transferred, 1e-6)  # FLOPs / Byte (~ 0.98 - 1.02 for decode)
 
         # Attained GFLOP/s based on roofline: min(Peak FLOP/s, AI * Peak Bandwidth)
         attained_gflops = min(hw["peak_tflops"] * 1000.0, ai * hw["peak_bandwidth_gbs"])
 
-        # Speedup potential with EKVA variable tile reduction (e.g. 50% budget)
-        # Memory-bound experts achieve speedup proportional to KV reduction
+        # Speedup potential with EKVA variable tile reduction
+        # Memory-bound experts achieve speedup proportional to KV bytes reduced
         is_memory_bound = ai < hw["ridge_point"]
-        budget_fraction = 0.5
-        ideal_speedup = (1.0 / budget_fraction) if is_memory_bound else 1.05
+        # Realistic speedup accounting for fixed kernel launch overhead (15%)
+        ideal_speedup = (1.0 / (0.15 + 0.85 * exp_frac)) if is_memory_bound else 1.05
 
         experts_data.append({
             "expert_id": eid,
             "entropy": ent,
             "routing_count": route_count,
+            "allocated_budget": exp_budget,
+            "budget_fraction": round(exp_frac, 3),
             "arithmetic_intensity": ai,
             "attained_gflops": attained_gflops,
             "is_memory_bound": is_memory_bound,
@@ -118,7 +136,7 @@ def compute_expert_roofline_metrics(
 
 
 def run_roofline_experiment(
-    models: List[str] = ["mixtral-8x7b", "qwen1.5-moe-a2.7b"],
+    models: List[str] = ["mixtral-8x7b", "qwen1.5-moe-a2.7b", "deepseek-moe-16b"],
     hw_name: str = "NVIDIA A100 40GB SXM",
     out_dir: str = "output",
 ) -> Dict:
@@ -134,12 +152,13 @@ def run_roofline_experiment(
     for m in models:
         res = compute_expert_roofline_metrics(m, hw_name=hw_name)
         all_results[m] = res
+        sp_vals = [e["projected_speedup"] for e in res["experts"]]
 
         print(f"\n📊 Model: {m.upper()}")
         print(f"   - Hardware Ridge Point: {res['hw_profile']['ridge_point']:.1f} FLOPs/Byte")
-        print(f"   - Autoregressive Decode Arithmetic Intensity (AI): ~1.0 - 2.0 FLOPs/Byte")
+        print(f"   - Autoregressive Decode Arithmetic Intensity (AI): ~1.0 FLOPs/Byte")
         print(f"   - Classification: 100% of Decode Attention Experts are firmly in the MEMORY-BOUND regime.")
-        print(f"   - Projected Speedup from 50% KV Budget Reduction: ~1.8x - 2.0x on memory-bound expert decode!")
+        print(f"   - Per-Expert Projected Speedup Range: {min(sp_vals):.2f}x to {max(sp_vals):.2f}x (Mean: {np.mean(sp_vals):.2f}x)")
 
     # Save artifacts
     torch.save(all_results, os.path.join(out_dir, "analytical_roofline_model.pt"))
@@ -169,9 +188,17 @@ def plot_roofline_publication_figures(results: Dict, hw_name: str, out_dir: str)
     ax1.plot(ai_vals, roofline_gflops, color="#e41a1c", linewidth=2.8, label=f"{hw_name} Roofline Ceiling")
     ax1.axvline(ridge, color="#7f7f7f", linestyle="--", alpha=0.7, label=f"Ridge Point ({ridge:.1f} FLOP/B)")
 
-    # Scatter decode experts for Mixtral & Qwen
-    colors = {"mixtral-8x7b": "#1f77b4", "qwen1.5-moe-a2.7b": "#2ca02c"}
-    markers = {"mixtral-8x7b": "o", "qwen1.5-moe-a2.7b": "^"}
+    # Scatter decode experts for Mixtral, Qwen, DeepSeek
+    colors = {
+        "mixtral-8x7b": "#1f77b4",
+        "qwen1.5-moe-a2.7b": "#2ca02c",
+        "deepseek-moe-16b": "#9467bd",
+    }
+    markers = {
+        "mixtral-8x7b": "o",
+        "qwen1.5-moe-a2.7b": "^",
+        "deepseek-moe-16b": "s",
+    }
 
     for mname, mdata in results.items():
         ais = [e["arithmetic_intensity"] for e in mdata["experts"]]

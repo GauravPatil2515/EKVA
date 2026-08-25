@@ -1,0 +1,636 @@
+{
+  "mixtral-8x7b": {
+    "model": "mixtral-8x7b",
+    "hardware": "NVIDIA A100 40GB SXM",
+    "hw_profile": {
+      "peak_tflops": 312.0,
+      "peak_bandwidth_gbs": 1555.0,
+      "ridge_point": 200.64308681672026
+    },
+    "experts": [
+      {
+        "expert_id": 0,
+        "entropy": 1.6636861198522623,
+        "routing_count": 231.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 1,
+        "entropy": 1.6711062284034623,
+        "routing_count": 242.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 2,
+        "entropy": 1.6381483919438764,
+        "routing_count": 215.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 3,
+        "entropy": 1.628021793778585,
+        "routing_count": 239.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 4,
+        "entropy": 1.6627127364307404,
+        "routing_count": 231.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 5,
+        "entropy": 1.653487677363246,
+        "routing_count": 230.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 6,
+        "entropy": 1.6632845590674572,
+        "routing_count": 243.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 7,
+        "entropy": 1.6429081369892926,
+        "routing_count": 225.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      }
+    ]
+  },
+  "qwen1.5-moe-a2.7b": {
+    "model": "qwen1.5-moe-a2.7b",
+    "hardware": "NVIDIA A100 40GB SXM",
+    "hw_profile": {
+      "peak_tflops": 312.0,
+      "peak_bandwidth_gbs": 1555.0,
+      "ridge_point": 200.64308681672026
+    },
+    "experts": [
+      {
+        "expert_id": 0,
+        "entropy": 0.9130428433418274,
+        "routing_count": 2226.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 1,
+        "entropy": 0.9430150985717773,
+        "routing_count": 757.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 2,
+        "entropy": 0.8683978915214539,
+        "routing_count": 540.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 3,
+        "entropy": 0.9006650447845459,
+        "routing_count": 1953.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 4,
+        "entropy": 0.8806412220001221,
+        "routing_count": 517.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 5,
+        "entropy": 0.8517902493476868,
+        "routing_count": 652.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 6,
+        "entropy": 0.8280386328697205,
+        "routing_count": 811.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 7,
+        "entropy": 0.791252613067627,
+        "routing_count": 501.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 8,
+        "entropy": 0.9607712626457214,
+        "routing_count": 713.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 9,
+        "entropy": 0.8104003071784973,
+        "routing_count": 5050.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 10,
+        "entropy": 0.9948347210884094,
+        "routing_count": 642.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 11,
+        "entropy": 0.9599496722221375,
+        "routing_count": 727.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 12,
+        "entropy": 0.9490854144096375,
+        "routing_count": 1034.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 13,
+        "entropy": 0.9863889217376709,
+        "routing_count": 605.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 14,
+        "entropy": 0.8586557507514954,
+        "routing_count": 1123.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 15,
+        "entropy": 0.8885282874107361,
+        "routing_count": 963.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 16,
+        "entropy": 0.9702516198158264,
+        "routing_count": 1175.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 17,
+        "entropy": 0.933015763759613,
+        "routing_count": 522.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 18,
+        "entropy": 0.9590563774108887,
+        "routing_count": 566.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 19,
+        "entropy": 0.9522569179534912,
+        "routing_count": 878.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 20,
+        "entropy": 0.9218185544013977,
+        "routing_count": 832.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 21,
+        "entropy": 0.8934820294380188,
+        "routing_count": 511.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 22,
+        "entropy": 0.7694516181945801,
+        "routing_count": 742.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 23,
+        "entropy": 0.8862197399139404,
+        "routing_count": 534.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 24,
+        "entropy": 0.9318060874938965,
+        "routing_count": 559.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 25,
+        "entropy": 0.8722327351570129,
+        "routing_count": 699.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 26,
+        "entropy": 0.8117164969444275,
+        "routing_count": 1756.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 27,
+        "entropy": 0.9335839152336121,
+        "routing_count": 482.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 28,
+        "entropy": 0.9109266400337219,
+        "routing_count": 1387.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 29,
+        "entropy": 0.8485896587371826,
+        "routing_count": 1076.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 30,
+        "entropy": 1.0519963502883911,
+        "routing_count": 674.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 31,
+        "entropy": 0.9085214734077454,
+        "routing_count": 528.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 32,
+        "entropy": 0.9812474846839905,
+        "routing_count": 492.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 33,
+        "entropy": 0.882481575012207,
+        "routing_count": 552.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 34,
+        "entropy": 0.9632587432861328,
+        "routing_count": 487.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 35,
+        "entropy": 1.0413376092910767,
+        "routing_count": 496.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 36,
+        "entropy": 0.8465855717658997,
+        "routing_count": 932.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 37,
+        "entropy": 0.8921186327934265,
+        "routing_count": 622.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 38,
+        "entropy": 0.8505508899688721,
+        "routing_count": 3348.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 39,
+        "entropy": 0.8967837691307068,
+        "routing_count": 2636.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 40,
+        "entropy": 0.9325483441352844,
+        "routing_count": 997.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 41,
+        "entropy": 0.9972277283668518,
+        "routing_count": 632.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 42,
+        "entropy": 0.9567463397979736,
+        "routing_count": 663.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 43,
+        "entropy": 0.8674971461296082,
+        "routing_count": 1236.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 44,
+        "entropy": 1.0332192182540894,
+        "routing_count": 573.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 45,
+        "entropy": 0.928086519241333,
+        "routing_count": 580.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 46,
+        "entropy": 0.9221423268318176,
+        "routing_count": 596.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 47,
+        "entropy": 0.943587601184845,
+        "routing_count": 546.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 48,
+        "entropy": 0.849613606929779,
+        "routing_count": 792.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 49,
+        "entropy": 0.9449743628501892,
+        "routing_count": 904.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 50,
+        "entropy": 1.0098298788070679,
+        "routing_count": 478.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 51,
+        "entropy": 0.8261110782623291,
+        "routing_count": 774.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 52,
+        "entropy": 0.9930341243743896,
+        "routing_count": 588.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 53,
+        "entropy": 0.8319172859191895,
+        "routing_count": 1485.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 54,
+        "entropy": 0.9199442863464355,
+        "routing_count": 687.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 55,
+        "entropy": 0.8211668133735657,
+        "routing_count": 613.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 56,
+        "entropy": 1.0531903505325317,
+        "routing_count": 1305.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 57,
+        "entropy": 0.902251660823822,
+        "routing_count": 506.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 58,
+        "entropy": 0.8671858906745911,
+        "routing_count": 854.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      },
+      {
+        "expert_id": 59,
+        "entropy": 0.7664715647697449,
+        "routing_count": 1605.0,
+        "arithmetic_intensity": 0.9998779445868424,
+        "attained_gflops": 1554.81020383254,
+        "is_memory_bound": true,
+        "projected_speedup": 2.0
+      }
+    ]
+  }
+}

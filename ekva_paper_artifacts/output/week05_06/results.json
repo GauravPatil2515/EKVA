@@ -1,0 +1,604 @@
+{
+  "mock": {
+    "mixtral-8x7b|ekva|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.514
+    },
+    "mixtral-8x7b|ekva|recency|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.568
+    },
+    "mixtral-8x7b|ekva|recency|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.676
+    },
+    "mixtral-8x7b|ekva|recency|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.784
+    },
+    "mixtral-8x7b|ekva|recency|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.892
+    },
+    "mixtral-8x7b|ekva|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.523
+    },
+    "mixtral-8x7b|ekva|attention|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.576
+    },
+    "mixtral-8x7b|ekva|attention|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.682
+    },
+    "mixtral-8x7b|ekva|attention|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.788
+    },
+    "mixtral-8x7b|ekva|attention|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.894
+    },
+    "mixtral-8x7b|ekva|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.532
+    },
+    "mixtral-8x7b|ekva|hybrid|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.584
+    },
+    "mixtral-8x7b|ekva|hybrid|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.688
+    },
+    "mixtral-8x7b|ekva|hybrid|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.792
+    },
+    "mixtral-8x7b|ekva|hybrid|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.896
+    },
+    "mixtral-8x7b|uniform|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.505
+    },
+    "mixtral-8x7b|uniform|recency|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.56
+    },
+    "mixtral-8x7b|uniform|recency|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.67
+    },
+    "mixtral-8x7b|uniform|recency|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.78
+    },
+    "mixtral-8x7b|uniform|recency|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.89
+    },
+    "mixtral-8x7b|uniform|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.514
+    },
+    "mixtral-8x7b|uniform|attention|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.568
+    },
+    "mixtral-8x7b|uniform|attention|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.676
+    },
+    "mixtral-8x7b|uniform|attention|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.784
+    },
+    "mixtral-8x7b|uniform|attention|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.892
+    },
+    "mixtral-8x7b|uniform|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.523
+    },
+    "mixtral-8x7b|uniform|hybrid|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.576
+    },
+    "mixtral-8x7b|uniform|hybrid|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.682
+    },
+    "mixtral-8x7b|uniform|hybrid|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.788
+    },
+    "mixtral-8x7b|uniform|hybrid|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.894
+    },
+    "mixtral-8x7b|snapkv_style|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.532
+    },
+    "mixtral-8x7b|snapkv_style|recency|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.584
+    },
+    "mixtral-8x7b|snapkv_style|recency|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.688
+    },
+    "mixtral-8x7b|snapkv_style|recency|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.792
+    },
+    "mixtral-8x7b|snapkv_style|recency|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.896
+    },
+    "mixtral-8x7b|snapkv_style|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.541
+    },
+    "mixtral-8x7b|snapkv_style|attention|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.592
+    },
+    "mixtral-8x7b|snapkv_style|attention|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.694
+    },
+    "mixtral-8x7b|snapkv_style|attention|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.796
+    },
+    "mixtral-8x7b|snapkv_style|attention|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.898
+    },
+    "mixtral-8x7b|snapkv_style|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.55
+    },
+    "mixtral-8x7b|snapkv_style|hybrid|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.6
+    },
+    "mixtral-8x7b|snapkv_style|hybrid|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.7
+    },
+    "mixtral-8x7b|snapkv_style|hybrid|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.8
+    },
+    "mixtral-8x7b|snapkv_style|hybrid|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.9
+    },
+    "mixtral-8x7b|pyramidkv_style|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.523
+    },
+    "mixtral-8x7b|pyramidkv_style|recency|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.576
+    },
+    "mixtral-8x7b|pyramidkv_style|recency|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.682
+    },
+    "mixtral-8x7b|pyramidkv_style|recency|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.788
+    },
+    "mixtral-8x7b|pyramidkv_style|recency|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.894
+    },
+    "mixtral-8x7b|pyramidkv_style|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.532
+    },
+    "mixtral-8x7b|pyramidkv_style|attention|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.584
+    },
+    "mixtral-8x7b|pyramidkv_style|attention|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.688
+    },
+    "mixtral-8x7b|pyramidkv_style|attention|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.792
+    },
+    "mixtral-8x7b|pyramidkv_style|attention|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.896
+    },
+    "mixtral-8x7b|pyramidkv_style|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.541
+    },
+    "mixtral-8x7b|pyramidkv_style|hybrid|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.592
+    },
+    "mixtral-8x7b|pyramidkv_style|hybrid|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.694
+    },
+    "mixtral-8x7b|pyramidkv_style|hybrid|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.796
+    },
+    "mixtral-8x7b|pyramidkv_style|hybrid|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.898
+    },
+    "mixtral-8x7b|random|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.46
+    },
+    "mixtral-8x7b|random|recency|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.52
+    },
+    "mixtral-8x7b|random|recency|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.64
+    },
+    "mixtral-8x7b|random|recency|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.76
+    },
+    "mixtral-8x7b|random|recency|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.88
+    },
+    "mixtral-8x7b|random|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.469
+    },
+    "mixtral-8x7b|random|attention|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.528
+    },
+    "mixtral-8x7b|random|attention|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.646
+    },
+    "mixtral-8x7b|random|attention|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.764
+    },
+    "mixtral-8x7b|random|attention|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.882
+    },
+    "mixtral-8x7b|random|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.478
+    },
+    "mixtral-8x7b|random|hybrid|20%": {
+      "memory_pct": 2.5,
+      "quality": 0.536
+    },
+    "mixtral-8x7b|random|hybrid|40%": {
+      "memory_pct": 5.0,
+      "quality": 0.652
+    },
+    "mixtral-8x7b|random|hybrid|60%": {
+      "memory_pct": 7.5,
+      "quality": 0.768
+    },
+    "mixtral-8x7b|random|hybrid|80%": {
+      "memory_pct": 10.0,
+      "quality": 0.884
+    },
+    "deepseek-moe-16b|ekva|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.586
+    },
+    "deepseek-moe-16b|ekva|recency|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.632
+    },
+    "deepseek-moe-16b|ekva|recency|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.724
+    },
+    "deepseek-moe-16b|ekva|recency|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.816
+    },
+    "deepseek-moe-16b|ekva|recency|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.908
+    },
+    "deepseek-moe-16b|ekva|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.604
+    },
+    "deepseek-moe-16b|ekva|attention|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.648
+    },
+    "deepseek-moe-16b|ekva|attention|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.736
+    },
+    "deepseek-moe-16b|ekva|attention|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.824
+    },
+    "deepseek-moe-16b|ekva|attention|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.912
+    },
+    "deepseek-moe-16b|ekva|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.622
+    },
+    "deepseek-moe-16b|ekva|hybrid|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.664
+    },
+    "deepseek-moe-16b|ekva|hybrid|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.748
+    },
+    "deepseek-moe-16b|ekva|hybrid|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.832
+    },
+    "deepseek-moe-16b|ekva|hybrid|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.916
+    },
+    "deepseek-moe-16b|uniform|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.532
+    },
+    "deepseek-moe-16b|uniform|recency|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.584
+    },
+    "deepseek-moe-16b|uniform|recency|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.688
+    },
+    "deepseek-moe-16b|uniform|recency|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.792
+    },
+    "deepseek-moe-16b|uniform|recency|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.896
+    },
+    "deepseek-moe-16b|uniform|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.55
+    },
+    "deepseek-moe-16b|uniform|attention|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.6
+    },
+    "deepseek-moe-16b|uniform|attention|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.7
+    },
+    "deepseek-moe-16b|uniform|attention|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.8
+    },
+    "deepseek-moe-16b|uniform|attention|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.9
+    },
+    "deepseek-moe-16b|uniform|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.568
+    },
+    "deepseek-moe-16b|uniform|hybrid|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.616
+    },
+    "deepseek-moe-16b|uniform|hybrid|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.712
+    },
+    "deepseek-moe-16b|uniform|hybrid|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.808
+    },
+    "deepseek-moe-16b|uniform|hybrid|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.904
+    },
+    "deepseek-moe-16b|snapkv_style|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.559
+    },
+    "deepseek-moe-16b|snapkv_style|recency|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.608
+    },
+    "deepseek-moe-16b|snapkv_style|recency|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.706
+    },
+    "deepseek-moe-16b|snapkv_style|recency|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.804
+    },
+    "deepseek-moe-16b|snapkv_style|recency|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.902
+    },
+    "deepseek-moe-16b|snapkv_style|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.577
+    },
+    "deepseek-moe-16b|snapkv_style|attention|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.624
+    },
+    "deepseek-moe-16b|snapkv_style|attention|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.718
+    },
+    "deepseek-moe-16b|snapkv_style|attention|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.812
+    },
+    "deepseek-moe-16b|snapkv_style|attention|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.906
+    },
+    "deepseek-moe-16b|snapkv_style|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.595
+    },
+    "deepseek-moe-16b|snapkv_style|hybrid|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.64
+    },
+    "deepseek-moe-16b|snapkv_style|hybrid|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.73
+    },
+    "deepseek-moe-16b|snapkv_style|hybrid|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.82
+    },
+    "deepseek-moe-16b|snapkv_style|hybrid|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.91
+    },
+    "deepseek-moe-16b|pyramidkv_style|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.5545
+    },
+    "deepseek-moe-16b|pyramidkv_style|recency|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.604
+    },
+    "deepseek-moe-16b|pyramidkv_style|recency|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.703
+    },
+    "deepseek-moe-16b|pyramidkv_style|recency|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.802
+    },
+    "deepseek-moe-16b|pyramidkv_style|recency|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.901
+    },
+    "deepseek-moe-16b|pyramidkv_style|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.5725
+    },
+    "deepseek-moe-16b|pyramidkv_style|attention|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.62
+    },
+    "deepseek-moe-16b|pyramidkv_style|attention|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.715
+    },
+    "deepseek-moe-16b|pyramidkv_style|attention|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.81
+    },
+    "deepseek-moe-16b|pyramidkv_style|attention|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.905
+    },
+    "deepseek-moe-16b|pyramidkv_style|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.5905
+    },
+    "deepseek-moe-16b|pyramidkv_style|hybrid|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.636
+    },
+    "deepseek-moe-16b|pyramidkv_style|hybrid|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.727
+    },
+    "deepseek-moe-16b|pyramidkv_style|hybrid|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.818
+    },
+    "deepseek-moe-16b|pyramidkv_style|hybrid|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.909
+    },
+    "deepseek-moe-16b|random|recency|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.478
+    },
+    "deepseek-moe-16b|random|recency|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.536
+    },
+    "deepseek-moe-16b|random|recency|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.652
+    },
+    "deepseek-moe-16b|random|recency|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.768
+    },
+    "deepseek-moe-16b|random|recency|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.884
+    },
+    "deepseek-moe-16b|random|attention|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.496
+    },
+    "deepseek-moe-16b|random|attention|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.552
+    },
+    "deepseek-moe-16b|random|attention|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.664
+    },
+    "deepseek-moe-16b|random|attention|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.776
+    },
+    "deepseek-moe-16b|random|attention|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.888
+    },
+    "deepseek-moe-16b|random|hybrid|10%": {
+      "memory_pct": 1.6,
+      "quality": 0.514
+    },
+    "deepseek-moe-16b|random|hybrid|20%": {
+      "memory_pct": 1.6,
+      "quality": 0.568
+    },
+    "deepseek-moe-16b|random|hybrid|40%": {
+      "memory_pct": 1.6,
+      "quality": 0.676
+    },
+    "deepseek-moe-16b|random|hybrid|60%": {
+      "memory_pct": 1.6,
+      "quality": 0.784
+    },
+    "deepseek-moe-16b|random|hybrid|80%": {
+      "memory_pct": 1.6,
+      "quality": 0.892
+    }
+  }
+}

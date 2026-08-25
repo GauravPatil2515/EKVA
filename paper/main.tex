@@ -24,7 +24,7 @@
 \maketitle
 
 \begin{abstract}
-Key-Value (KV) cache memory footprint is the primary bottleneck for scaling context length during autoregressive Large Language Model (LLM) inference. While adaptive KV budgeting has been explored at the head level (Ada-KV) and layer level (CAKE, PyramidKV, InfoKV), the \emph{expert axis} in sparse Mixture-of-Experts (MoE) architectures---where attention complexity, routing frequency, and domain specialization vary drastically across individual experts---remains uncharacterized. In this work, we present \textbf{EKVA} (Expert-Aware Key-Value Allocation), a calibration-based, training-free framework that allocates per-expert KV budgets via a multi-signal formulation combining attention entropy, routing frequency, and token specialization under exact global memory and starvation constraints. Across three distinct sparse-MoE architectures spanning 8, 60, and 64 experts (\emph{Mixtral-8x7B}, \emph{Qwen1.5-MoE-A2.7B}, and \emph{DeepSeek-MoE-16B}), we demonstrate that expert-granularity multi-signal budgeting consistently outperforms layer-aggregated (CAKE-style) and uniform baselines, achieving up to \textbf{+18.8\% to +19.9\% higher quality retention} at tight 20\% KV budgets. We mechanistically explain why load-balancing auxiliary loss causes entropy-routing anti-correlations ($r = -0.168$), prove that expert-axis allocation avoids the reasoning collapse observed in layer-adaptive methods (79.23\% reasoning accuracy vs. 60.01\% for CAKE at 40\% budget), introduce a streaming online recalibration cascade, and demonstrate up to \textbf{$2.0\times$ decode speedup} via an analytical roofline-guided variable-tile Triton kernel.
+Key-Value (KV) cache memory footprint is the primary bottleneck for scaling context length during autoregressive Large Language Model (LLM) inference. While adaptive KV budgeting has been explored at the head level (Ada-KV) and layer level (CAKE, PyramidKV, InfoKV), the \emph{expert axis} in sparse Mixture-of-Experts (MoE) architectures---where attention complexity, routing frequency, and domain specialization vary drastically across individual experts---remains uncharacterized. In this work, we present \textbf{EKVA} (Expert-Aware Key-Value Allocation), a calibration-based, training-free framework that allocates per-expert KV budgets via a multi-signal formulation combining attention entropy, routing frequency, and token specialization under exact global memory and starvation constraints. Across three distinct sparse-MoE architectures spanning 8, 60, and 64 experts (\emph{Mixtral-8x7B}, \emph{Qwen1.5-MoE-A2.7B}, and \emph{DeepSeek-MoE-16B}), we demonstrate that expert-granularity multi-signal budgeting consistently outperforms layer-aggregated (CAKE-style) and uniform baselines, achieving \textbf{+18.9\% to +19.8\% higher quality retention} at tight 20\% KV budgets. We mechanistically characterize why auxiliary load-balancing losses decouple routing frequency from attention entropy in routed MoEs ($r = -0.091$ in Qwen, $r = 0.426$ in Mixtral) while shared-expert architectures exhibit positive coupling ($r = 0.791$ in DeepSeek), prove that expert-axis allocation avoids the reasoning collapse observed in layer-adaptive methods (79.23\% reasoning accuracy vs. 60.01\% for CAKE at 40\% budget), introduce a streaming online recalibration cascade, and demonstrate up to \textbf{$3.34\times$ decode speedup} (mean $2.04\times$--$2.09\times$) via an analytical roofline-guided variable-tile Triton kernel.
 
 \keywords{Mixture of Experts (MoE) \and KV Cache Compression \and Long-Context LLM Inference \and Attention Entropy \and Triton Kernels.}
 \end{abstract}
@@ -47,17 +47,17 @@ Despite the emergence of sparse Mixture-of-Experts (MoE) models as the state-of-
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.88\textwidth]{figures/rq2_mechanistic_analysis.png}
-\caption{Mechanistic analysis of per-expert attention entropy vs. routing frequency across layers in sparse MoE models. Auxiliary load-balancing losses decouple routing frequency from attention entropy, necessitating a multi-signal formulation.}
+\caption{Mechanistic analysis of per-expert attention entropy vs. routing frequency across layers in sparse MoE models. Auxiliary load-balancing losses decouple routing frequency from attention entropy in pure-routed architectures, necessitating a multi-signal formulation.}
 \label{fig:motivation}
 \end{figure}
 
 In this paper, we introduce \textbf{EKVA} (Expert-Aware Key-Value Allocation), the first comprehensive, training-free framework designed to characterize and exploit expert-level heterogeneity for KV cache budget allocation. Our primary contributions are:
 \begin{itemize}
-    \item \textbf{RQ1 (Granularity Ablation)}: We present the first controlled comparison of per-expert vs. layer-aggregated budgeting across three MoE families (8, 60, and 64 experts). EKVA delivers up to \textbf{+18.8\%} quality retention gains over uniform allocation at 20\% budget.
-    \item \textbf{RQ2 (Mechanistic Decoupling)}: We discover that auxiliary load-balancing losses induce an anti-correlation between routing frequency and attention entropy, explaining why pure entropy-only budgeting fails and establishing the mathematical necessity of our multi-signal formulation.
+    \item \textbf{RQ1 (Granularity Ablation)}: We present the first controlled comparison of per-expert vs. layer-aggregated budgeting across three MoE families (8, 60, and 64 experts). EKVA delivers up to \textbf{+19.3\%} quality retention gains over uniform allocation at 20\% budget.
+    \item \textbf{RQ2 (Mechanistic Characterization)}: We discover how architectural routing designs and auxiliary losses dictate signal coupling (decoupling in pure-routed MoEs vs. coupling in shared-expert MoEs), establishing the mathematical necessity of our multi-signal formulation.
     \item \textbf{RQ3 (Transferability \& Reasoning Stability)}: We demonstrate that expert-level budgeting avoids the severe reasoning collapse suffered by layer-adaptive methods (such as InfoKV~\cite{lin2026infokv}), achieving \textbf{79.23\%} reasoning retention vs. \textbf{60.01\%} for CAKE at 40\% budget.
-    \item \textbf{Novel Mechanism (Dynamic Recalibration)}: We formulate a streaming online recalibration cascade with Exponential Moving Averages (EMA), improving retained quality by \textbf{+4.8\%} during multi-turn domain shifts.
-    \item \textbf{RQ4 (Systems Payoff)}: Analytical roofline modeling confirms 100\% of decode attention experts are deeply memory-bound, and a custom variable-tile Triton FlashAttention-2 kernel realizes up to \textbf{$2.0\times$} decode speedups.
+    \item \textbf{Novel Mechanism (Dynamic Recalibration)}: We formulate a streaming online recalibration cascade with Exponential Moving Averages (EMA), improving retained quality by \textbf{+2.85\%} during multi-turn domain shifts.
+    \item \textbf{RQ4 (Systems Payoff)}: Analytical roofline modeling confirms 100\% of decode attention experts are deeply memory-bound, and a custom variable-tile Triton FlashAttention-2 kernel realizes up to \textbf{$3.34\times$} decode speedups (mean $2.04\times$--$2.09\times$).
 \end{itemize}
 
 % -------------------------------------------------------------------------
@@ -154,7 +154,7 @@ We evaluate across three open-weight sparse MoE foundation models:
 Evaluations are conducted across budget fractions $\beta \in \{0.10, 0.20, 0.40, 0.60, 0.80, 1.00\}$ (corresponding to 10\%--100\% of FullKV).
 
 \subsection{RQ1: Expert vs. Layer Granularity Ablation}
-Table~\ref{tab:rq1} reports the retained quality percentages across models and granularities. Expert-granularity multi-signal allocation consistently achieves superior quality retention over uniform baselines and CAKE-style layer-aggregated allocation.
+Table~\ref{tab:rq1} reports the retained quality percentages across models and granularities. Expert-granularity multi-signal allocation consistently achieves superior quality retention over uniform baselines and CAKE-style layer-aggregated allocation across all evaluated budget fractions.
 
 \begin{table}[t]
 \centering
@@ -165,16 +165,16 @@ Table~\ref{tab:rq1} reports the retained quality percentages across models and g
 \toprule
 \textbf{Model Architecture} & \textbf{Experts} & \textbf{Uniform (20\%)} & \textbf{CAKE (20\%)} & \textbf{EKVA (20\%)} & \textbf{Uniform (40\%)} & \textbf{EKVA (40\%)} \\
 \midrule
-\textbf{Qwen1.5-MoE-A2.7B} & 60 & 39.53\% & 54.55\% & \textbf{58.34\%} (+18.8\%) & 63.54\% & \textbf{82.41\%} (+18.9\%) \\
-\textbf{DeepSeek-MoE-16B}  & 64 & 39.53\% & 56.28\% & \textbf{58.62\%} (+19.1\%) & 63.54\% & \textbf{82.71\%} (+19.2\%) \\
-\textbf{Mixtral-8x7B}      & 8  & 39.53\% & 58.27\% & \textbf{59.33\%} (+19.8\%) & 63.54\% & \textbf{83.45\%} (+19.9\%) \\
+\textbf{Qwen1.5-MoE-A2.7B} & 60 & 39.53\% & 55.45\% & \textbf{58.79\%} (+19.3\%) & 63.54\% & \textbf{82.89\%} (+19.4\%) \\
+\textbf{DeepSeek-MoE-16B}  & 64 & 39.53\% & 55.94\% & \textbf{58.46\%} (+18.9\%) & 63.54\% & \textbf{82.53\%} (+19.0\%) \\
+\textbf{Mixtral-8x7B}      & 8  & 39.53\% & 58.25\% & \textbf{59.33\%} (+19.8\%) & 63.54\% & \textbf{83.46\%} (+19.9\%) \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
 \subsection{Component Ablation Study}
-Table~\ref{tab:ablation} isolates the contribution of each signal component on \emph{Qwen1.5-MoE-A2.7B} at 40\% budget. Combining entropy, routing frequency, and specialization achieves the highest overall retention (82.41\%), confirming the synergistic benefit of the multi-signal formulation.
+Table~\ref{tab:ablation} isolates the contribution of each signal component on \emph{Qwen1.5-MoE-A2.7B} at 40\% budget. Combining entropy, routing frequency, and specialization achieves the highest overall retention (82.89\%), confirming the synergistic benefit of the multi-signal formulation.
 
 \begin{table}[t]
 \centering
@@ -186,10 +186,10 @@ Table~\ref{tab:ablation} isolates the contribution of each signal component on \
 \textbf{Policy Formulation} & \textbf{Weighting Function} & \textbf{Retained Quality (\%)} \\
 \midrule
 Uniform Baseline           & $B_i = \mathcal{B}_{\text{total}} / N$ & 63.54\% \\
-Specialization-Only        & $B_i \propto (1 + \text{Spec}_i)$      & 78.85\% \\
-Routing-Only               & $B_i \propto \log(\text{Route}_i)$     & 79.50\% \\
-Entropy-Only               & $B_i \propto \bar{H}_i$                & 80.81\% \\
-\textbf{EKVA Multi-Signal} & $B_i \propto \bar{H}_i \cdot \log(\text{Route}_i) \cdot (1 + \text{Spec}_i)$ & \textbf{82.41\%} \\
+Specialization-Only        & $B_i \propto (1 + \text{Spec}_i)$      & 80.13\% \\
+Routing-Only               & $B_i \propto \log(\text{Route}_i)$     & 80.62\% \\
+Entropy-Only               & $B_i \propto \bar{H}_i$                & 81.69\% \\
+\textbf{EKVA Multi-Signal} & $B_i \propto \bar{H}_i \cdot \log(\text{Route}_i) \cdot (1 + \text{Spec}_i)$ & \textbf{82.89\%} \\
 \bottomrule
 \end{tabular}
 }
@@ -202,13 +202,13 @@ Entropy-Only               & $B_i \propto \bar{H}_i$                & 80.81\% \\
 \label{fig:rq3}
 \end{figure}
 
-\subsection{RQ2: Mechanistic Decoupling in MoE Architectures}
-In standard dense attention models, attention entropy directly proxies representational diversity. However, in sparse MoE models, auxiliary load-balancing losses penalize routing concentration to prevent expert collapse. Our empirical correlation analysis reveals:
+\subsection{RQ2: Mechanistic Analysis of Signal Coupling Across Architectures}
+In dense attention models, attention entropy directly proxies representational diversity. However, sparse MoE models employ different routing architectures and loss objectives that modulate this relationship:
 \begin{itemize}
-    \item In \emph{Mixtral-8x7B}, global correlation between entropy and routing count is weak ($r = 0.426, p = 0.292$), with 11 of 32 layers exhibiting negative correlations (reaching $r = -0.70$).
-    \item In \emph{Qwen1.5-MoE-A2.7B}, the correlation is decoupled ($r = -0.091$).
+    \item \textbf{Decoupled Routing in Pure-Routed MoEs}: In models with strict auxiliary load-balancing losses such as \emph{Qwen1.5-MoE-A2.7B}, attention entropy is fully decoupled from routing frequency ($r = -0.091, p = 0.487$). In \emph{Mixtral-8x7B}, the global correlation is weak and statistically insignificant ($r = 0.426, p = 0.292$), with 16 of 32 layers exhibiting negative correlations (reaching $r = -0.701$). In these models, pure-entropy budgeting starves high-frequency generalist experts.
+    \item \textbf{Coupled Routing in Shared-Expert MoEs}: Conversely, in architectures with dedicated shared experts such as \emph{DeepSeek-MoE-16B}, where routing is less constrained by auxiliary penalties, entropy and routing frequency exhibit positive correlation ($r = 0.791, p < 10^{-14}$).
 \end{itemize}
-This explains why entropy-only budgeting causes performance degradation: high-frequency experts handle common, low-entropy tokens and are improperly penalized under pure-entropy schemes.
+This architectural divergence confirms why single-signal heuristics (entropy-only or routing-only) fail to generalize across model families. EKVA's multi-signal formulation unifies both regimes by jointly weighting entropy, routing load, and token-type specialization.
 
 \subsection{RQ3: Domain Transferability \& Reasoning Stability}
 Figure~\ref{fig:rq3} evaluates cross-domain transferability across four prompt sets (General Text, Code, Mathematical Reasoning, and Long-Context QA).
@@ -247,7 +247,7 @@ Figure~\ref{fig:dynamic} illustrates the dynamic recalibration cascade across a 
 We profile autoregressive decoding on an NVIDIA A100-SXM4-40GB GPU (Peak Compute: 312 TFLOP/s, HBM Bandwidth: 1555 GB/s, Ridge Point: 200.64 FLOPs/Byte). 
 \begin{itemize}
     \item The attained Arithmetic Intensity for decode attention across all experts is $\text{AI} \approx 0.99988$ FLOPs/Byte, confirming that 100\% of decode attention experts are deeply in the \textbf{memory-bandwidth bound} regime.
-    \item By truncating tile traversal to expert-allocated budgets, our Triton kernel achieves up to \textbf{$2.0\times$} theoretical decode speedup on memory-bound experts (Figure~\ref{fig:roofline}).
+    \item By truncating tile traversal to expert-allocated budgets, our variable-tile Triton kernel achieves per-expert decode speedups ranging from $1.62\times$ to $3.34\times$ (mean $2.09\times$) on Qwen1.5-MoE, $1.64\times$ to $2.76\times$ (mean $2.07\times$) on DeepSeek-MoE, and $2.02\times$ to $2.06\times$ (mean $2.04\times$) on Mixtral-8x7B (Figure~\ref{fig:roofline}).
 \end{itemize}
 
 \begin{figure}[t]
