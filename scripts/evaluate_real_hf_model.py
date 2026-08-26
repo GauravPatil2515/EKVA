@@ -303,9 +303,18 @@ def run_real_evaluation(
         "low_cpu_mem_usage": True,
     }
     if device == "cuda":
-        if use_4bit:
-            load_kwargs["load_in_4bit"] = True
-            load_kwargs["device_map"] = "auto"
+        total_vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        # Automatically use 4-bit quantization on T4 / RTX 3050 (VRAM < 24GB) to avoid OOM
+        if use_4bit or total_vram_gb < 24.0:
+            print(f"💡 Detected {total_vram_gb:.1f} GB VRAM GPU. Enabling 4-bit quantization (bitsandbytes) to fit comfortably.")
+            try:
+                import bitsandbytes
+                load_kwargs["load_in_4bit"] = True
+                load_kwargs["device_map"] = "auto"
+            except ImportError:
+                print("⚠️ bitsandbytes not found. Loading in float16...")
+                load_kwargs["torch_dtype"] = torch.float16
+                load_kwargs["device_map"] = "auto"
         else:
             load_kwargs["torch_dtype"] = torch.float16
             load_kwargs["device_map"] = "auto"
