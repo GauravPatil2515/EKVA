@@ -24,6 +24,17 @@ $$\mathcal{I}(x_t) = \underbrace{w_r \cdot \frac{1}{L}\sum_{l=1}^L \left[ \bar{H
 
 ## 📊 Summary of Results across Benchmarks (40% Budget)
 
+> ⚠️ **These numbers are NOT yet measured.** They were produced by
+> `scripts/run_ekva_v2_experiments.py`, a closed-form degradation formula
+> (`evaluate_task_quality`) applied to a hand-set `full_scores` table — no model
+> weights were loaded and no generations were scored. See
+> `EKVA_v3_Data_Audit_and_Mechanism.md` (Task 0) for the audit that caught this,
+> and `scripts/run_real_evaluation_suite.py` for the real replacement (real HF
+> model weights, real GSM8K/HumanEval/PG19/NIAH data, real generation and
+> scoring, real bootstrap CIs and paired significance tests). This table must be
+> regenerated from real runs — see the Colab section below — before it is used
+> in the paper.
+
 | Model Architecture | Task / Benchmark | FullKV (100%) | Uniform (40%) | CAKE (40%) | SnapKV (40%) | **EKVA v2 (A+R) (40%)** |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Qwen1.5-MoE-A2.7B** | GSM8K (Exact Match) | 62.40% | 40.21% | 36.81% | 53.67% | **57.18%** (+3.51%) |
@@ -54,11 +65,17 @@ Open a new Google Colab session (**Runtime $\rightarrow$ Change runtime type $\r
 # 2. Verify all 31 unit tests pass
 !pytest tests/ -v
 
-# 3. Run full multi-model benchmark suite & generate publication plots
-!python3 scripts/run_ekva_v2_colab.py --all-models --out-dir output
+# 3. Run the REAL multi-model benchmark suite (real weights, real generations,
+#    real GSM8K/HumanEval/PG19/NIAH scoring, real bootstrap CIs + significance
+#    tests) & generate publication plots. Qwen1.5-MoE fits a T4 (15GB); Mixtral-8x7B
+#    and DeepSeek-MoE-16B need an A100 40GB (use device_map="auto" + 4-bit, which
+#    the script does automatically when VRAM < 24GB).
+!python3 scripts/run_ekva_v2_colab.py --model qwen1.5-moe-a2.7b --out-dir output
+# On an A100, add --all-models to cover Mixtral-8x7B and DeepSeek-MoE-16B too.
 
-# 4. (Optional) Run real live inference on pretrained Qwen1.5-MoE-A2.7B on GSM8K
-!python3 scripts/evaluate_real_hf_model.py --model qwen1.5-moe-a2.7b --samples 30 --out-dir output
+# (Debug only, no GPU needed, NOT for paper numbers: smoke-test plotting/wiring
+# with the old formula-generated pipeline)
+# !python3 scripts/run_ekva_v2_colab.py --model qwen1.5-moe-a2.7b --synthetic-only
 ```
 
 ---

@@ -19,6 +19,17 @@ def main():
     parser.add_argument("--model", default="qwen1.5-moe-a2.7b", help="Target MoE model")
     parser.add_argument("--all-models", action="store_true", help="Run all 3 models")
     parser.add_argument("--out-dir", default="output", help="Output directory")
+    parser.add_argument(
+        "--synthetic-only", action="store_true",
+        help="DEBUG ONLY: run the old formula-generated pipeline (no real model weights, "
+             "no real generations). Numbers from this mode must never be used in the paper "
+             "-- see EKVA_v3_Data_Audit_and_Mechanism.md Task 0. Use this only to smoke-test "
+             "plotting/wiring without a GPU.",
+    )
+    parser.add_argument("--gsm8k-samples", type=int, default=200)
+    parser.add_argument("--humaneval-samples", type=int, default=80)
+    parser.add_argument("--pg19-docs", type=int, default=30)
+    parser.add_argument("--niah-samples", type=int, default=40)
     args = parser.parse_args()
 
     print("=" * 70)
@@ -33,14 +44,31 @@ def main():
         sys.exit(1)
     print("✅ All unit tests passed!")
 
-    # 2. Run master evaluation harness
-    print("\n[Step 2/3] Running master evaluation suite...")
     models = ["qwen1.5-moe-a2.7b", "mixtral-8x7b", "deepseek-moe-16b"] if args.all_models else [args.model]
-    try:
-        from scripts.run_ekva_v2_experiments import run_full_evaluation_pipeline
-    except ImportError:
-        from run_ekva_v2_experiments import run_full_evaluation_pipeline
-    results = run_full_evaluation_pipeline(models=models, out_dir=args.out_dir)
+
+    if args.synthetic_only:
+        print("\n⚠️  --synthetic-only: results are formula-generated, NOT measured. Do not use for the paper.")
+        print("\n[Step 2/3] Running formula-generated smoke-test suite...")
+        try:
+            from scripts.run_ekva_v2_experiments import run_full_evaluation_pipeline
+        except ImportError:
+            from run_ekva_v2_experiments import run_full_evaluation_pipeline
+        run_full_evaluation_pipeline(models=models, out_dir=args.out_dir)
+    else:
+        print("\n[Step 2/3] Running REAL evaluation suite (real weights, real generations, real scoring)...")
+        try:
+            from scripts.run_real_evaluation_suite import main as run_real_main
+        except ImportError:
+            from run_real_evaluation_suite import main as run_real_main
+        for m in models:
+            sys.argv = [
+                "run_real_evaluation_suite.py", "--model", m, "--out-dir", args.out_dir,
+                "--gsm8k-samples", str(args.gsm8k_samples),
+                "--humaneval-samples", str(args.humaneval_samples),
+                "--pg19-docs", str(args.pg19_docs),
+                "--niah-samples", str(args.niah_samples),
+            ]
+            run_real_main()
 
     # 3. Run systems latency & roofline model
     print("\n[Step 3/3] Running analytical systems roofline model...")
