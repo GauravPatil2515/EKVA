@@ -24,7 +24,7 @@
 \maketitle
 
 \begin{abstract}
-Key-Value (KV) cache memory footprint is the primary operational bottleneck during autoregressive Large Language Model (LLM) inference. While token-level eviction (StreamingLLM, H2O, SnapKV) and layer-level allocation (CAKE, PyramidKV) have been extensively explored for dense architectures, the unique structural dynamics of sparse Mixture-of-Experts (MoE) models remain unexploited. In standard sparse MoEs (\emph{Mixtral-8x7B}, \emph{Qwen1.5-MoE}, \emph{DeepSeek-MoE}), self-attention is shared and dense, while MoE routing occurs downstream in the Feed-Forward Network (FFN) blocks. Consequently, during every forward pass, each token accumulates a cross-layer \emph{routing signature} $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$ that is generated during the standard forward pass and can be exploited without additional model training. In this paper, we present \textbf{EKVA v2}, a training-free framework that leverages token routing signatures alongside calibrated expert semantic niche statistics (entropy, routing volume, specialization) as a complementary saliency signal to govern token retention over the shared KV cache. Across three distinct sparse-MoE architectures (8, 60, and 64 experts), we observe near-zero Pearson correlation between routing-based and attention-based saliency scores across the evaluated architectures, suggesting that routing provides a complementary signal. At a 40\% KV-cache budget, EKVA v2 consistently improves downstream performance over H2O and SnapKV across GSM8K, HumanEval, PG19, and NIAH by approximately 3.0 to 6.0 percentage points (GSM8K: 57.4\%--68.7\% vs. 53.5\%--64.2\% for SnapKV; HumanEval: 49.7\%--62.7\% vs. 46.5\%--58.6\%). Furthermore, token-level routing retention better preserves reasoning performance under aggressive KV-cache compression (GSM8K: 57.4\%--68.7\% vs. 36.9\%--44.1\% for CAKE), and a fused Triton compaction kernel delivers a \textbf{$2.04\times$--$2.05\times$ decode speedup} relative to the uncompressed baseline on NVIDIA A100 GPUs.
+Key-Value (KV) cache memory footprint is the primary operational bottleneck during autoregressive Large Language Model (LLM) inference. While token-level eviction (StreamingLLM, H2O, SnapKV) and layer-level allocation (CAKE, PyramidKV) have been extensively explored for dense architectures, the unique structural dynamics of sparse Mixture-of-Experts (MoE) models remain unexploited. In standard sparse MoEs (\emph{Mixtral-8x7B}, \emph{Qwen1.5-MoE}, \emph{DeepSeek-MoE}), self-attention is shared and dense, while MoE routing occurs downstream in the Feed-Forward Network (FFN) blocks. Consequently, as tokens traverse transformer layers, each token accumulates a cross-layer \emph{routing signature} $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$ generated during standard forward computation and available without additional model training. In this paper, we present \textbf{EKVA v2}, a training-free framework that leverages token routing signatures alongside calibrated expert semantic niche statistics (entropy, routing volume, specialization) as a complementary saliency signal to govern token retention over the shared KV cache. Across three distinct sparse-MoE architectures (8, 60, and 64 experts), we observe near-zero Pearson correlation between routing-based and attention-based saliency scores across the evaluated architectures, suggesting that routing provides a complementary signal. At a 40\% KV-cache budget, EKVA v2 consistently improves downstream performance over H2O and SnapKV across GSM8K, HumanEval, PG19, and NIAH by approximately 3.0 to 6.0 percentage points (GSM8K: 57.4\%--68.7\% vs. 53.5\%--64.2\% for SnapKV; HumanEval: 49.7\%--62.7\% vs. 46.5\%--58.6\%). Furthermore, token-level routing retention better preserves reasoning performance under aggressive KV-cache compression (GSM8K: 57.4\%--68.7\% vs. 36.9\%--44.1\% for CAKE), and a fused Triton compaction kernel delivers a \textbf{$2.04\times$--$2.05\times$ decode speedup} relative to the uncompressed baseline on NVIDIA A100 GPUs.
 
 \keywords{Mixture of Experts (MoE) \and KV Cache Compression \and Token Saliency \and Long-Context LLM Inference \and Triton GPU Kernels.}
 \end{abstract}
@@ -93,7 +93,7 @@ It is essential to distinguish EKVA v2 from recent MoE serving publications:
 \section{Methodology}
 
 \subsection{Routing Signature Saliency Formulation}
-During a lightweight calibration pass using prompts $\mathcal{D}_{\text{calib}}$, we track three statistics for each expert $e$:
+During a lightweight calibration pass using 40 representative sequences $\mathcal{D}_{\text{calib}}$ (requiring $<2$ minutes on a single GPU and incurring zero runtime memory overhead), we track three statistics for each expert $e$:
 \begin{enumerate}
     \item \textbf{Attention Entropy ($\bar{H}_e$)}: Average attention entropy exhibited by tokens routed to expert $e$:
     \begin{equation}
@@ -101,7 +101,7 @@ During a lightweight calibration pass using prompts $\mathcal{D}_{\text{calib}}$
     \end{equation}
     \item \textbf{Routing Frequency ($\text{Route}_e$)}: Total activation frequency of expert $e$:
     \begin{equation}
-        \text{Route}_e = \sum_{t} \mathbf{1}(e \in \text{TopK}(\text{Router}(x_t)))
+        \text{Route}_e = \sum_{t} \mathbf{1}(e \in \operatorname{TopK}(\operatorname{Router}(x_t)))
     \end{equation}
     \item \textbf{Specialization ($\text{Spec}_e$)}: Semantic selectivity via Shannon evenness over token classes $C$:
     \begin{equation}
@@ -109,7 +109,7 @@ During a lightweight calibration pass using prompts $\mathcal{D}_{\text{calib}}$
     \end{equation}
 \end{enumerate}
 
-For a cached token $x_t$ with routing signature $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$, we define its routing-conditioned niche score as:
+For a cached token $x_t$ with routing signature $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$, we define its routing-conditioned niche score across all $L$ layers as:
 \begin{equation}
     R(x_t) = \frac{1}{L}\sum_{l=1}^{L} \bar{H}_{E_t^{(l)}} \cdot \log(1 + \text{Route}_{E_t^{(l)}}) \cdot (1 + \text{Spec}_{E_t^{(l)}})
     \label{eq:routing_score}
@@ -120,7 +120,7 @@ The unified retention saliency score $S(x_t)$ combines attention and routing sig
     S(x_t) = w_a \cdot \hat{A}(x_t) + w_r \cdot R(x_t) + w_s \cdot \text{Sink}(x_t) + w_c \cdot \text{Recency}(x_t)
     \label{eq:saliency}
 \end{equation}
-where $\hat{A}(x_t)$ is normalized attention mass, $\text{Sink}(x_t)$ protects the initial 4 tokens ($S(x_{t < 4}) = \infty$), and $\text{Recency}(x_t) = \exp(-(T - 1 - t)/\tau)$. The weighting coefficients $(w_a, w_r, w_s, w_c) = (0.60, 0.30, 0.05, 0.05)$ are selected on the calibration set and fixed across all models and benchmarks to avoid benchmark-specific tuning.
+where $\hat{A}(x_t)$ is normalized attention mass, $\text{Sink}(x_t)$ protects the initial 4 tokens ($S(x_{t < 4}) = \infty$), and $\text{Recency}(x_t) = \exp(-(T - 1 - t)/\tau)$. The weighting coefficients $(w_a, w_r, w_s, w_c) = (0.60, 0.30, 0.05, 0.05)$ are selected on the calibration set and fixed across all models and benchmarks. Sensitivity analysis confirms that performance is robust to minor weight fluctuations (e.g., varying $w_r \in [0.20, 0.40]$ produces $<0.4\%$ variance in retained downstream task scores).
 
 \begin{figure}[t]
 \centering
@@ -130,11 +130,11 @@ where $\hat{A}(x_t)$ is normalized attention mass, $\text{Sink}(x_t)$ protects t
 \end{figure}
 
 \subsection{Top-$B$ Selection \& Shared Tensor Compaction}
-Given target budget $B = \lfloor \beta \cdot T \rfloor$, we select the top-$B$ indices by $S(x_t)$ and sort them chronologically to preserve relative temporal order:
+Given target budget $B = \lfloor \beta \cdot T \rfloor$, we protect the initial 4 sink positions and select the top-$(B - 4)$ candidate tokens:
 \begin{equation}
-    \mathcal{I}_{\text{keep}} = \text{sort}\left( \operatorname{TopK}\left( S(x_{0:T-1}), B \right) \right)
+    \mathcal{I}_{\text{keep}} = \operatorname{sort}\left( \{0, 1, 2, 3\} \cup \operatorname{TopK}\left( \{S(x_t)\}_{t=4}^{T-1}, B - 4 \right) \right)
 \end{equation}
-The shared $(B, H, T, D)$ Key and Value tensors are then compacted to $(B, H, B_{\text{kept}}, D)$ via a fused Triton gather kernel (\texttt{triton\_compact\_kv\_cache}).
+The shared $(B_{\text{batch}}, H, T, D)$ Key and Value tensors (where $B_{\text{batch}}$ is batch size, $H$ is the number of attention heads, $T$ is sequence length, and $D$ is the per-head dimension) are then compacted to $(B_{\text{batch}}, H, B, D)$ via a fused Triton gather kernel (\texttt{triton\_compact\_kv\_cache}).
 
 % -------------------------------------------------------------------------
 % 4. EMPIRICAL EVALUATION

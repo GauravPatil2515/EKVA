@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  27 AUG 2026 01:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  27 AUG 2026 02:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -636,13 +636,6 @@ Overfull \hbox (2.56319pt too wide) in paragraph at lines 27--28
 dard sparse
  []
 
-
-Overfull \hbox (36.35103pt too wide) in paragraph at lines 27--28
-\OT1/lmr/m/n/9 pass, each to-ken ac-cu-mu-lates a cross-layer \OT1/lmr/m/it/9 r
-out-ing sig-na-ture $\OMS/lmsy/m/n/9 R[] \OT1/lmr/m/n/9 = \OMS/lmsy/m/n/9 f\OML
-/lmm/m/it/9 E[]; [] ; E[]\OMS/lmsy/m/n/9 g$
- []
-
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 2
 9.
 (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
@@ -667,14 +660,7 @@ File: figures/fig2_ablation_curves.png Graphic file (type png)
 Package pdftex.def Info: figures/fig2_ablation_curves.png  used on input line 1
 27.
 (pdftex.def)             Requested size: 340.17958pt x 93.21927pt.
-
-Overfull \hbox (21.03554pt too wide) in paragraph at lines 136--138
-\OT1/lmr/m/n/10 The shared $(\OML/lmm/m/it/10 B; H; T; D\OT1/lmr/m/n/10 )$ Key 
-and Value ten-sors are then com-pacted to $(\OML/lmm/m/it/10 B; H; B[]; D\OT1/l
-mr/m/n/10 )$
- []
-
-[4{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathex.enc}]
+ [4{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathex.enc}]
 Overfull \hbox (61.7167pt too wide) in paragraph at lines 188--198
  [][] 
  []
@@ -735,7 +721,7 @@ sy7.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy9.pfb></usr/share/texmf/fon
 ts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt9.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (8 pages, 1418959 bytes).
+Output written on main.pdf (8 pages, 1420166 bytes).
 PDF statistics:
  281 PDF objects out of 1000 (max. 8388607)
  213 compressed objects within 3 object streams
