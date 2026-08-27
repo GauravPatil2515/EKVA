@@ -26,8 +26,8 @@ def main():
              "-- see EKVA_v3_Data_Audit_and_Mechanism.md Task 0. Use this only to smoke-test "
              "plotting/wiring without a GPU.",
     )
-    parser.add_argument("--gsm8k-samples", type=int, default=200)
-    parser.add_argument("--humaneval-samples", type=int, default=80)
+    parser.add_argument("--gsm8k-samples", type=int, default=1319)
+    parser.add_argument("--humaneval-samples", type=int, default=164)
     parser.add_argument("--pg19-docs", type=int, default=30)
     parser.add_argument("--niah-samples", type=int, default=40)
     args = parser.parse_args()

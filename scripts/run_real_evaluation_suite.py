@@ -90,13 +90,9 @@ def paired_bootstrap_test(a_values: List[float], b_values: List[float], n_boot: 
     n = len(diff)
     boot_diffs = np.array([np.mean(rng.choice(diff, size=n, replace=True)) for _ in range(n_boot)])
     observed = float(np.mean(diff))
-    # Two-sided p-value: fraction of bootstrap resamples on the other side of 0
-    # from the observed effect direction.
-    if observed >= 0:
-        p = float(np.mean(boot_diffs <= 0)) * 2.0
-    else:
-        p = float(np.mean(boot_diffs >= 0)) * 2.0
-    p = min(1.0, p)
+    # Two-sided symmetric p-value
+    p = min(float(np.mean(boot_diffs <= 0)), float(np.mean(boot_diffs >= 0))) * 2.0
+    p = min(1.0, float(p))
     ci_low, ci_high = float(np.percentile(boot_diffs, 2.5)), float(np.percentile(boot_diffs, 97.5))
     return {
         "diff_mean": round(observed, 3),
@@ -636,8 +632,8 @@ def main():
     parser.add_argument("--model", default="qwen1.5-moe-a2.7b")
     parser.add_argument("--out-dir", default="output")
     parser.add_argument("--4bit", dest="use_4bit", action="store_true", default=None)
-    parser.add_argument("--gsm8k-samples", type=int, default=200)
-    parser.add_argument("--humaneval-samples", type=int, default=80)
+    parser.add_argument("--gsm8k-samples", type=int, default=1319)
+    parser.add_argument("--humaneval-samples", type=int, default=164)
     parser.add_argument("--pg19-docs", type=int, default=30)
     parser.add_argument("--niah-samples", type=int, default=40)
     parser.add_argument("--calib-samples", type=int, default=40)
