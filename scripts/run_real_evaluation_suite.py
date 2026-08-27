@@ -579,8 +579,21 @@ def build_niah_samples(filler_texts: List[str], tokenizer, n: int, seq_len: int 
 # Main evaluation loop.
 # ---------------------------------------------------------------------------
 
-def run_task(task: str, examples, model, tokenizer, device, profiles, num_experts, budgets, policies, max_new_tokens) -> Dict:
+def run_task(
+    task: str,
+    examples,
+    model,
+    tokenizer,
+    device,
+    profiles,
+    num_experts,
+    budgets,
+    policies,
+    max_new_tokens,
+    spot_check: int = 3,
+) -> Dict:
     """Runs one task across all budgets/policies, returns real per-example raw_scores."""
+    from tqdm import tqdm
     results = {}
     for b in budgets:
         b_key = f"{int(b*100)}%"
@@ -591,7 +604,9 @@ def run_task(task: str, examples, model, tokenizer, device, profiles, num_expert
             if policy == "FullKV" and b < 0.999:
                 continue
             raw_scores = []
-            for ex in examples:
+            desc = f"{task} [{b_key} {policy}]"
+            pbar = tqdm(examples, desc=desc, ncols=90)
+            for ex_idx, ex in enumerate(pbar):
                 if task == "GSM8K":
                     prompt = (
                         "Solve the following mathematical reasoning problem step by step. "
@@ -601,19 +616,31 @@ def run_task(task: str, examples, model, tokenizer, device, profiles, num_expert
                     gen = evict_and_generate(model, tokenizer, prompt, b, policy, profiles, num_experts, max_new_tokens, device)
                     gold = extract_gsm8k_answer(ex["answer"])
                     pred = extract_gsm8k_answer(gen)
-                    raw_scores.append(1.0 if (pred == gold and gold is not None) else 0.0)
+                    is_correct = 1.0 if (pred == gold and gold is not None) else 0.0
+                    raw_scores.append(is_correct)
+                    if ex_idx < spot_check:
+                        print(f"\n[SpotCheck #{ex_idx+1} | {task} {b_key} {policy}] Pred: {pred} | Gold: {gold} -> {'CORRECT' if is_correct else 'WRONG'}")
                 elif task == "HumanEval":
                     prompt = ex["prompt"]
                     gen = evict_and_generate(model, tokenizer, prompt, b, policy, profiles, num_experts, max_new_tokens, device)
                     passed = run_humaneval_test(prompt + gen, ex["test"], ex["entry_point"])
-                    raw_scores.append(1.0 if passed else 0.0)
+                    is_correct = 1.0 if passed else 0.0
+                    raw_scores.append(is_correct)
+                    if ex_idx < spot_check:
+                        print(f"\n[SpotCheck #{ex_idx+1} | HumanEval {b_key} {policy}] Entry: {ex['entry_point']} -> {'PASSED' if passed else 'FAILED'}")
                 elif task == "NIAH":
                     gen = evict_and_generate(model, tokenizer, ex["prompt"], b, policy, profiles, num_experts, 16, device)
-                    raw_scores.append(1.0 if ex["answer"] in gen else 0.0)
+                    passed = 1.0 if ex["answer"] in gen else 0.0
+                    raw_scores.append(passed)
                 elif task == "PG19_PPL":
                     raw_scores.append(compute_ppl_with_eviction(model, tokenizer, ex, b, policy, profiles, num_experts, device))
+                
+                curr_mean = np.mean(raw_scores) if raw_scores else 0.0
+                pbar.set_postfix({"acc": f"{curr_mean*100:.1f}%"} if task != "PG19_PPL" else {"ppl": f"{curr_mean:.2f}"})
+
             mean_v, ci_l, ci_h = bootstrap_ci(raw_scores)
             results[b_key][policy] = {"mean": mean_v, "ci_95": [ci_l, ci_h], "n": len(raw_scores), "raw_scores": raw_scores}
+            print(f"  -> Result [{b_key} {policy}]: {mean_v} (95% CI [{ci_l}, {ci_h}], n={len(raw_scores)})")
     return results
 
 
@@ -650,8 +677,14 @@ def main():
     parser.add_argument("--pg19-docs", type=int, default=30)
     parser.add_argument("--niah-samples", type=int, default=40)
     parser.add_argument("--calib-samples", type=int, default=40)
-    parser.add_argument("--max-new-tokens", type=int, default=128)
+    parser.add_argument("--budgets", nargs="+", type=float, default=[0.40, 1.00])
+    parser.add_argument("--baselines", nargs="+", default=["FullKV", "CAKE", "H2O", "SnapKV", "R-only", "A+R (EKVA v2)"])
+    parser.add_argument("--tasks", nargs="+", default=["GSM8K", "HumanEval", "PG19_PPL", "NIAH"])
+    parser.add_argument("--spot-check", type=int, default=3)
     args = parser.parse_args()
+
+    eval_budgets = args.budgets
+    eval_baselines = args.baselines
 
     os.makedirs(args.out_dir, exist_ok=True)
     print(f"Loading {args.model} ...")
@@ -668,60 +701,65 @@ def main():
     print(f"  per-layer rho: {layer_rhos}")
 
     print("Loading real task datasets ...")
-    gsm8k = load_gsm8k(args.gsm8k_samples)
-    humaneval = load_humaneval(args.humaneval_samples)
-    pg19_texts, pg19_source = load_pg19_or_fallback(args.pg19_docs)
-    niah = build_niah_samples(pg19_texts, tokenizer, args.niah_samples)
+    dataset_map = {}
+    if "GSM8K" in args.tasks:
+        dataset_map["GSM8K"] = load_gsm8k(args.gsm8k_samples)
+    if "HumanEval" in args.tasks:
+        dataset_map["HumanEval"] = load_humaneval(args.humaneval_samples)
+    if "PG19_PPL" in args.tasks or "NIAH" in args.tasks:
+        pg19_texts, pg19_source = load_pg19_or_fallback(args.pg19_docs)
+        if "PG19_PPL" in args.tasks:
+            dataset_map["PG19_PPL"] = pg19_texts
+        if "NIAH" in args.tasks:
+            dataset_map["NIAH"] = build_niah_samples(pg19_texts, tokenizer, args.niah_samples)
+    else:
+        pg19_texts, pg19_source = [], "none"
 
     tasks_results = {}
-    for task_name, examples in [("GSM8K", gsm8k), ("HumanEval", humaneval), ("PG19_PPL", pg19_texts), ("NIAH", niah)]:
-        print(f"\nRunning {task_name} ({len(examples)} real examples) across {BUDGETS} x {BASELINES} ...")
+    out_file = os.path.join(args.out_dir, f"real_eval_{args.model}.json")
+
+    for task_name, examples in dataset_map.items():
+        print(f"\nRunning {task_name} ({len(examples)} real examples) across {eval_budgets} x {eval_baselines} ...")
         t0 = time.time()
         tasks_results[task_name] = run_task(
             task_name, examples, model, tokenizer, device, profiles, num_experts,
-            BUDGETS, BASELINES, args.max_new_tokens,
+            eval_budgets, eval_baselines, args.max_new_tokens, spot_check=args.spot_check,
         )
-        print(f"  done in {time.time()-t0:.1f}s")
+        print(f"  Completed {task_name} in {time.time()-t0:.1f}s")
 
-    # Paired significance: A+R vs every other baseline, per task per budget.
-    significance = {}
-    for task_name, task_res in tasks_results.items():
-        significance[task_name] = {}
-        for b_key, policies_res in task_res.items():
-            if "A+R (EKVA v2)" not in policies_res:
-                continue
-            ar_raw = policies_res["A+R (EKVA v2)"]["raw_scores"]
-            significance[task_name][b_key] = {}
-            for other in policies_res:
-                if other == "A+R (EKVA v2)":
+        # Save intermediate checkpoint after each task
+        significance = {}
+        for t_name, task_res in tasks_results.items():
+            significance[t_name] = {}
+            for b_key, policies_res in task_res.items():
+                if "A+R (EKVA v2)" not in policies_res:
                     continue
-                significance[task_name][b_key][f"A+R vs {other}"] = paired_bootstrap_test(ar_raw, policies_res[other]["raw_scores"])
+                ar_raw = policies_res["A+R (EKVA v2)"]["raw_scores"]
+                significance[t_name][b_key] = {}
+                for other in policies_res:
+                    if other == "A+R (EKVA v2)":
+                        continue
+                    significance[t_name][b_key][f"A+R vs {other}"] = paired_bootstrap_test(ar_raw, policies_res[other]["raw_scores"])
 
-    output = {
-        "model": args.model,
-        "protocol": {
-            "quantization": quant_used,
-            "device": device,
-            "gsm8k": {"source": "gsm8k/main/test", "n": len(gsm8k)},
-            "humaneval": {"source": "openai_humaneval/test", "n": len(humaneval)},
-            "pg19_ppl": {"source": pg19_source, "n": len(pg19_texts)},
-            "niah": {"source": f"synthetic needle in {pg19_source}", "n": len(niah)},
-            "calibration": {"source": calib_source, "n": len(calib_texts)},
-            "generation": {"do_sample": False, "max_new_tokens": args.max_new_tokens},
-            "budgets": BUDGETS,
-            "baselines": BASELINES,
-        },
-        "correlation_rho": round(corr, 4),
-        "R_variance": round(r_variance, 6),
-        "layerwise_correlation_rho": layer_rhos,
-        "tasks": tasks_results,
-        "significance_vs_A+R": significance,
-    }
-
-    out_file = os.path.join(args.out_dir, f"real_eval_{args.model}.json")
-    with open(out_file, "w") as f:
-        json.dump(output, f, indent=2)
-    print(f"\nSaved real evaluation results to: {out_file}")
+        output = {
+            "model": args.model,
+            "protocol": {
+                "quantization": quant_used,
+                "device": device,
+                "tasks": list(dataset_map.keys()),
+                "budgets": eval_budgets,
+                "baselines": eval_baselines,
+                "max_new_tokens": args.max_new_tokens,
+            },
+            "correlation_rho": round(corr, 4),
+            "R_variance": round(r_variance, 6),
+            "layerwise_correlation_rho": layer_rhos,
+            "tasks": tasks_results,
+            "significance_vs_A+R": significance,
+        }
+        with open(out_file, "w") as f:
+            json.dump(output, f, indent=2)
+        print(f"  [Checkpoint] Saved intermediate results to: {out_file}")
 
     try:
         import matplotlib
