@@ -298,9 +298,11 @@ def run_real_evaluation(
     print("📥 Loading Tokenizer and Model Weights...")
     tokenizer = AutoTokenizer.from_pretrained(spec.hf_id, trust_remote_code=True)
 
+    os.makedirs("./offload", exist_ok=True)
     load_kwargs = {
         "trust_remote_code": True,
         "low_cpu_mem_usage": True,
+        "offload_folder": "./offload",
     }
     if device == "cuda":
         total_vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
@@ -314,8 +316,10 @@ def run_real_evaluation(
                     load_in_4bit=True,
                     bnb_4bit_compute_dtype=torch.float16,
                     bnb_4bit_quant_type="nf4",
+                    llm_int8_enable_fp32_cpu_offload=True,
                 )
                 load_kwargs["device_map"] = "auto"
+                load_kwargs["max_memory"] = {0: f"{int(total_vram_gb * 0.85)}GiB", "cpu": "24GiB"}
             except Exception as e:
                 print(f"⚠️ bitsandbytes 4-bit quantization unavailable ({e}). Loading in float16...")
                 load_kwargs["torch_dtype"] = torch.float16
