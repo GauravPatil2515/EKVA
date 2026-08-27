@@ -36,5 +36,8 @@
 - Confirmed 100% of decode attention experts are deeply memory-bound ($\text{AI} \approx 1.0$ vs $200.6$ FLOPs/Byte ridge point on A100).
 - Validated fused Triton compaction kernel with zero numerical error against PyTorch reference.
 
-### Phase 5: Manuscript Formatting & Submission (In Progress)
-- 10-page Springer Nature `llncs` format paper compiled with 0 errors (`paper/main.pdf`).
+### Phase 5: Manuscript Formatting & Camera-Ready Packaging (Completed)
+- 8-page Springer Nature `llncs` camera-ready format paper compiled with 0 errors (`paper/main.pdf`).
+- Implemented real inference evaluation suite (`run_real_evaluation_suite.py`) with 4-bit quantization, CPU offload for Colab Free Tier GPUs, symmetric paired bootstrap significance testing, and incremental task checkpointing.
+- Analytical systems roofline profiling on NVIDIA A100 validates $2.04\times - 2.09\times$ decode speedup in memory-bandwidth-bound attention.
+- All code, unit tests, artifacts, and documentation synchronized on GitHub.

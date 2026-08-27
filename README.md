@@ -70,15 +70,23 @@ Open a new Google Colab session (**Runtime $\rightarrow$ Change runtime type $\r
 !git clone https://github.com/GauravPatil2515/EKVA.git
 %cd EKVA
 
-# 2. Install dependencies & verify unit tests
+# 2. Install dependencies & verify unit tests (31 passed)
 !pip install -q transformers datasets accelerate triton matplotlib seaborn tqdm pytest bitsandbytes
 !pytest tests/ -v
 
-# 3. Run multi-model benchmark evaluation suite & generate publication plots
-!python3 scripts/run_ekva_v2_colab.py --all-models --synthetic-only --out-dir output
+# 3. Run real model evaluation suite (Qwen1.5-MoE in 4-bit with live progress and automatic zip download)
+!python3 scripts/run_real_evaluation_suite.py \
+    --model qwen1.5-moe-a2.7b \
+    --gsm8k-samples 20 \
+    --humaneval-samples 10 \
+    --pg19-docs 5 \
+    --niah-samples 10 \
+    --budgets 0.40 1.00 \
+    --spot-check 3 \
+    --out-dir output
 
-# 4. Optional: Run real live weights on GSM8K (fits a 15GB T4 with auto-4bit)
-# !python3 scripts/run_real_evaluation_suite.py --model qwen1.5-moe-a2.7b --gsm8k-samples 30 --out-dir output
+# 4. Profile hardware roofline on A100 GPU
+!python3 experiments/analytical_roofline_model.py --out-dir output
 ```
 
 ---
