@@ -124,10 +124,16 @@ def load_model_and_tokenizer(model_name: str, use_4bit: Optional[bool] = None):
         if want_4bit:
             try:
                 import bitsandbytes  # noqa: F401
-                load_kwargs["load_in_4bit"] = True
+                from transformers import BitsAndBytesConfig
+                load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                )
                 load_kwargs["device_map"] = "auto"
                 quant_used = "4bit-nf4"
-            except ImportError:
+            except Exception as e:
+                print(f"⚠️ bitsandbytes 4-bit quantization unavailable ({e}). Loading in float16...")
                 load_kwargs["torch_dtype"] = torch.float16
                 load_kwargs["device_map"] = "auto"
                 quant_used = "fp16"

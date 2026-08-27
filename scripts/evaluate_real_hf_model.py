@@ -309,10 +309,15 @@ def run_real_evaluation(
             print(f"💡 Detected {total_vram_gb:.1f} GB VRAM GPU. Enabling 4-bit quantization (bitsandbytes) to fit comfortably.")
             try:
                 import bitsandbytes
-                load_kwargs["load_in_4bit"] = True
+                from transformers import BitsAndBytesConfig
+                load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                )
                 load_kwargs["device_map"] = "auto"
-            except ImportError:
-                print("⚠️ bitsandbytes not found. Loading in float16...")
+            except Exception as e:
+                print(f"⚠️ bitsandbytes 4-bit quantization unavailable ({e}). Loading in float16...")
                 load_kwargs["torch_dtype"] = torch.float16
                 load_kwargs["device_map"] = "auto"
         else:
