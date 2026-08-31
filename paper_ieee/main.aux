@@ -1,0 +1,83 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{dao2023flashattention2,xiao2023streamingllm}
+\citation{xiao2023streamingllm}
+\citation{zhang2023h2o}
+\citation{li2024snapkv}
+\citation{feng2025adakv}
+\citation{cake2025}
+\citation{zhang2024pyramidkv}
+\citation{lin2026infokv}
+\citation{jiang2024mixtral}
+\citation{bai2024qwenmoe}
+\citation{dai2024deepseekmoe}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {Mechanistic structure of standard sparse MoE architectures.} Self-attention is shared and dense across all sequence positions, while sparse expert routing occurs downstream in the FFN block. Each token accumulates a cross-layer routing signature $\mathcal  {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for token retention in the shared KV buffer.}}{1}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{1}{\textbf {Mechanistic structure of standard sparse MoE architectures.} Self-attention is shared and dense across all sequence positions, while sparse expert routing occurs downstream in the FFN block. Each token accumulates a cross-layer routing signature $\mathcal {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for token retention in the shared KV buffer}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-A}}Architectural Reality \& Motivation}{1}{subsection.1.1}\protected@file@percent }
+\citation{xiao2023streamingllm}
+\citation{zhang2023h2o}
+\citation{li2024snapkv}
+\citation{feng2025adakv}
+\citation{cake2025}
+\citation{zhang2024pyramidkv}
+\citation{lin2026infokv}
+\citation{liu2025pikv}
+\citation{sun2026moend}
+\citation{balashov2026triroute}
+\citation{dai2024deepseekmoe}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-B}}Key Contributions}{2}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}KV Cache Eviction in Dense LLMs}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Disambiguation from Concurrent MoE Literature}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Methodology}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Expert Profile Calibration}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Routing Signature Saliency Score}{2}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:routing_score}{{5}{2}{Routing Signature Saliency Score}{equation.3.5}{}}
+\citation{williams2009roofline}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textbf  {Downstream Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math Reasoning), HumanEval (Code Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts).}}{3}{figure.2}\protected@file@percent }
+\newlabel{fig:ablation_curves}{{2}{3}{\textbf {Downstream Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math Reasoning), HumanEval (Code Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts)}{figure.2}{}}
+\newlabel{eq:saliency}{{6}{3}{Routing Signature Saliency Score}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Top-$B$ Selection \& Fused Cache Compaction}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Systems Roofline \& Hardware Characterization}{3}{section.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Algorithmic flow of EKVA v2 token retention and fused cache compaction during the prompt prefill phase.}}{3}{figure.3}\protected@file@percent }
+\newlabel{alg:ekva}{{3}{3}{Algorithmic flow of EKVA v2 token retention and fused cache compaction during the prompt prefill phase}{figure.3}{}}
+\citation{bai2024qwenmoe}
+\citation{jiang2024mixtral}
+\citation{dai2024deepseekmoe}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Hardware Systems Roofline Analysis on NVIDIA A100 GPU.} (Left) Roofline placement showing decode attention operating at $\text  {AI} \approx 0.9997\text  { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode speedup via fused Triton compaction relative to FullKV.}}{4}{figure.4}\protected@file@percent }
+\newlabel{fig:roofline}{{4}{4}{\textbf {Hardware Systems Roofline Analysis on NVIDIA A100 GPU.} (Left) Roofline placement showing decode attention operating at $\text {AI} \approx 0.9997\text { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode speedup via fused Triton compaction relative to FullKV}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Empirical Evaluation}{4}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Experimental Configuration}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Main Benchmark Results}{4}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Cross-Signal Orthogonality Analysis}{4}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Comparison with Layer-Adaptive Eviction}{4}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Component Ablation \& Discussion}{4}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Individual Saliency Signal Contribution}{4}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Limitations}{4}{subsection.6.2}\protected@file@percent }
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{dao2023flashattention2}{1}
+\bibcite{xiao2023streamingllm}{2}
+\bibcite{zhang2023h2o}{3}
+\bibcite{li2024snapkv}{4}
+\bibcite{feng2025adakv}{5}
+\bibcite{cake2025}{6}
+\bibcite{zhang2024pyramidkv}{7}
+\bibcite{lin2026infokv}{8}
+\bibcite{jiang2024mixtral}{9}
+\bibcite{bai2024qwenmoe}{10}
+\bibcite{dai2024deepseekmoe}{11}
+\bibcite{liu2025pikv}{12}
+\bibcite{sun2026moend}{13}
+\bibcite{balashov2026triroute}{14}
+\bibcite{williams2009roofline}{15}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples. Deltas indicate absolute percentage point (pp) gains over SnapKV.}}{5}{table.1}\protected@file@percent }
+\newlabel{tab:main_results}{{I}{5}{Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples. Deltas indicate absolute percentage point (pp) gains over SnapKV}{table.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget.}}{5}{table.2}\protected@file@percent }
+\newlabel{tab:ablation}{{II}{5}{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{5}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{5}{section*.2}\protected@file@percent }
+\gdef \@abspage@last{5}
