@@ -54,22 +54,20 @@
 \newlabel{fig:roofline}{{4}{4}{\textbf {Hardware Systems Roofline Analysis on NVIDIA A100 GPU.} (Left) Roofline placement showing decode attention operating at $\text {AI} \approx 0.9997\text { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction relative to FullKV across budget fractions}{figure.4}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {V}Empirical Evaluation}{4}{section.5}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Experimental Configuration}{4}{subsection.5.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Cross-Signal Orthogonality Analysis.} Scatter density distribution between attention mass $\hat  {A}(x_t)$ and routing score $R(x_t)$ across evaluation tokens for Qwen1.5-MoE-A2.7B ($\rho = -0.006$), Mixtral-8x7B ($\rho = +0.002$), and DeepSeek-MoE-16B ($\rho = +0.002$), demonstrating empirical orthogonality.}}{4}{figure.5}\protected@file@percent }
-\newlabel{fig:correlation}{{5}{4}{\textbf {Cross-Signal Orthogonality Analysis.} Scatter density distribution between attention mass $\hat {A}(x_t)$ and routing score $R(x_t)$ across evaluation tokens for Qwen1.5-MoE-A2.7B ($\rho = -0.006$), Mixtral-8x7B ($\rho = +0.002$), and DeepSeek-MoE-16B ($\rho = +0.002$), demonstrating empirical orthogonality}{figure.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Main Benchmark Results}{4}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Cross-Signal Orthogonality Analysis}{4}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Comparison with Layer- and Head-Adaptive Baselines}{4}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Component Ablation \& Discussion}{4}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Individual Saliency Signal Contribution}{4}{subsection.6.1}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute percentage point (pp) gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test).}}{5}{table.1}\protected@file@percent }
 \newlabel{tab:main_results}{{I}{5}{Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute percentage point (pp) gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test)}{table.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Layer-wise Orthogonality Analysis Across Transformer Depth.} Pearson correlation $\rho _l(R(x_t), \hat  {A}(x_t))$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers, mean $\rho = -0.006$), Mixtral-8x7B (32 layers, mean $\rho = +0.002$), and DeepSeek-MoE-16B (28 layers, mean $\rho = +0.002$). Near-zero correlation holds uniformly across all shallow, intermediate, and deep layers, confirming that routing signatures provide an independent retention signal throughout the network depth.}}{5}{figure.5}\protected@file@percent }
+\newlabel{fig:layerwise_correlation}{{5}{5}{\textbf {Layer-wise Orthogonality Analysis Across Transformer Depth.} Pearson correlation $\rho _l(R(x_t), \hat {A}(x_t))$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers, mean $\rho = -0.006$), Mixtral-8x7B (32 layers, mean $\rho = +0.002$), and DeepSeek-MoE-16B (28 layers, mean $\rho = +0.002$). Near-zero correlation holds uniformly across all shallow, intermediate, and deep layers, confirming that routing signatures provide an independent retention signal throughout the network depth}{figure.5}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals].}}{5}{table.2}\protected@file@percent }
 \newlabel{tab:ablation}{{II}{5}{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals]}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Expert Specialization Dynamics}{5}{subsection.6.2}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \textbf  {Expert Semantic Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text  {Spec}_{e,l}$ across mathematical, coding, and natural language token classes, illustrating distinct functional niche distributions across layers.}}{5}{figure.6}\protected@file@percent }
 \newlabel{fig:specialization}{{6}{5}{\textbf {Expert Semantic Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text {Spec}_{e,l}$ across mathematical, coding, and natural language token classes, illustrating distinct functional niche distributions across layers}{figure.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Component Ablation \& Discussion}{5}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Individual Saliency Signal Contribution}{5}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Expert Specialization Dynamics}{5}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Limitations}{5}{subsection.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{5}{section.7}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{dao2023flashattention2}{1}
@@ -87,5 +85,7 @@
 \bibcite{sun2026moend}{13}
 \bibcite{balashov2026triroute}{14}
 \bibcite{williams2009roofline}{15}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Limitations}{6}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{6}{section.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{References}{6}{section*.2}\protected@file@percent }
 \gdef \@abspage@last{6}

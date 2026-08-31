@@ -279,14 +279,14 @@ To test whether routing signatures provide distinct information from attention m
     \item \textbf{Mixtral-8x7B}: $\rho = +0.002$
     \item \textbf{DeepSeek-MoE-16B}: $\rho = +0.002$
 \end{itemize}
-The near-zero correlation (Fig.~\ref{fig:correlation}) demonstrates that routing history and query-key attention mass capture fundamentally independent dimensions of token importance, explaining why combining them yields synergistic retention gains.
+The near-zero correlation (Fig.~\ref{fig:layerwise_correlation}) demonstrates that routing history and query-key attention mass capture fundamentally independent dimensions of token importance, explaining why combining them yields synergistic retention gains.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/rq2_correlation.png}
-\caption{\textbf{Cross-Signal Orthogonality Analysis.} Scatter density distribution between attention mass $\hat{A}(x_t)$ and routing score $R(x_t)$ across evaluation tokens for Qwen1.5-MoE-A2.7B ($\rho = -0.006$), Mixtral-8x7B ($\rho = +0.002$), and DeepSeek-MoE-16B ($\rho = +0.002$), demonstrating empirical orthogonality.}
-\label{fig:correlation}
-\end{figure}
+\includegraphics[width=\textwidth]{figures/layerwise_correlation_heatmap.png}
+\caption{\textbf{Layer-wise Orthogonality Analysis Across Transformer Depth.} Pearson correlation $\rho_l(R(x_t), \hat{A}(x_t))$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers, mean $\rho = -0.006$), Mixtral-8x7B (32 layers, mean $\rho = +0.002$), and DeepSeek-MoE-16B (28 layers, mean $\rho = +0.002$). Near-zero correlation holds uniformly across all shallow, intermediate, and deep layers, confirming that routing signatures provide an independent retention signal throughout the network depth.}
+\label{fig:layerwise_correlation}
+\end{figure*}
 
 \subsection{Comparison with Layer- and Head-Adaptive Baselines}
 Table~\ref{tab:main_results} illustrates that layer-adaptive compression (CAKE) experiences severe performance degradation on multi-step reasoning tasks (GSM8K drops from 62.40\% FullKV down to 36.88\% on Qwen, and from 74.80\% down to 44.11\% on Mixtral). Similarly, head-adaptive allocation (Ada-KV~\cite{feng2025adakv}, achieving 51.20\% on Qwen GSM8K) and information-funneling layer allocation (InfoKV~\cite{lin2026infokv}, achieving 41.80\% on Qwen GSM8K) struggle because depleting capacity in shallow or intermediate layers breaks symbolic derivation chains. In contrast, EKVA v2 makes token-level retention decisions independent of layer-wide budget constraints, allowing functionally critical tokens to be preserved across the shared KV cache regardless of which layer they occur in (Fig.~\ref{fig:ablation_curves}).
