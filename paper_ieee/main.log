@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  1 SEP 2026 01:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  1 SEP 2026 01:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -535,52 +535,56 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
-Underfull \hbox (badness 3209) in paragraph at lines 55--56
-[]\OT1/ptm/b/n/10 (+20) Token-Level Evic-tion\OT1/ptm/m/n/10 (+20) : Se-lec-tiv
-ely re-tain-ing high-
- []
-
-<figures/rq2_mechanistic_analysis.png, id=104, 1292.9103pt x 368.3361pt>
+<figures/rq2_mechanistic_analysis.png, id=100, 1292.9103pt x 368.3361pt>
 File: figures/rq2_mechanistic_analysis.png Graphic file (type png)
 <use figures/rq2_mechanistic_analysis.png>
 Package pdftex.def Info: figures/rq2_mechanistic_analysis.png  used on input li
-ne 64.
+ne 62.
 (pdftex.def)             Requested size: 252.0pt x 71.78871pt.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \hbox (badness 1874) in paragraph at lines 67--68
+[]\OT1/ptm/m/n/10 (+20) In sparse Mixture-of-Experts (MoE) foun-da-tion mod-
+ []
 
- [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf
--dist/fonts/enc/dvips/base/8r.enc}
+
+Underfull \hbox (badness 1859) in paragraph at lines 67--68
+\OT1/ptm/m/n/10 (+20) els|such as \OT1/ptm/m/it/10 (+20) Mixtral-8x7B \OT1/ptm/
+m/n/10 (+20) [[][]8[][]], \OT1/ptm/m/it/10 (+20) Qwen1.5-MoE \OT1/ptm/m/n/10 (+
+20) [[][]9[][]], and
+ []
+
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf-
+dist/fonts/enc/dvips/base/8r.enc}
 
 
  <./figures/rq2_mechanistic_analysis.png>]
-Underfull \hbox (badness 2990) in paragraph at lines 111--113
+Underfull \hbox (badness 2990) in paragraph at lines 106--108
 []\OT1/ptm/m/n/10 (+20) To char-ac-ter-ize ex-pert spe-cial-iza-tion, we per-fo
 rm a
  []
 
-<figures/fig2_ablation_curves.png, id=151, 1293.1512pt x 354.3639pt>
+<figures/fig2_ablation_curves.png, id=155, 1293.1512pt x 354.3639pt>
 File: figures/fig2_ablation_curves.png Graphic file (type png)
 <use figures/fig2_ablation_curves.png>
 Package pdftex.def Info: figures/fig2_ablation_curves.png  used on input line 1
-30.
+25.
 (pdftex.def)             Requested size: 516.0pt x 141.40239pt.
-[2]
-Underfull \hbox (badness 4454) in paragraph at lines 150--151
-[]\OT1/ptm/m/n/10 (+20) The weight-ing hyper-parameters $\OT1/cmr/m/n/10 (\OML/
-cmm/m/it/10 w[]; w[]; w[]; w[]\OT1/cmr/m/n/10 ) =
+
+Underfull \hbox (badness 10000) in paragraph at lines 145--146
+[]\OT1/ptm/m/n/10 (+20) The hyper-parameters $\OT1/cmr/m/n/10 (\OML/cmm/m/it/10
+ w[]; w[]; w[]; w[]\OT1/cmr/m/n/10 ) =
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 152.
+(hyperref)                removing `math shift' on input line 147.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 152.
+(hyperref)                removing `math shift' on input line 147.
 
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
-57.
+52.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
@@ -589,51 +593,63 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-Underfull \hbox (badness 10000) in paragraph at lines 179--179
-\OT1/ptm/m/n/9 (+20) 2: Ex-e-cute pre-fill for-ward pass with non-invasive
+Underfull \hbox (badness 10000) in paragraph at lines 151--153
+\OT1/ptm/m/n/10 (+20) To pre-vent non-contiguous mem-ory ac-cess dur-ing
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 179--179
+Underfull \hbox (badness 10000) in paragraph at lines 151--153
+\OT1/ptm/m/n/10 (+20) au-tore-gres-sive de-cod-ing, a cus-tom Tri-ton ker-nel
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 151--153
+\OT1/ptm/m/n/10 (+20) (\OT1/pcr/m/n/10 triton_compact_kv_cache\OT1/ptm/m/n/10 (
++20) ) gath-ers and packs
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 174--174
 \OT1/ptm/m/n/9 (+20) 7: Se-lect can-di-date in-dices $\OMS/cmsy/m/n/9 I[]  
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 179--179
+Underfull \hbox (badness 10000) in paragraph at lines 174--174
 \OT1/ptm/m/n/9 (+20) 9: Ex-e-cute fused Tri-ton ker-nel: $\OML/cmm/m/it/9 K[]; 
 V[] \OMS/cmsy/m/n/9  
  []
 
-[3 <./figures/fig2_ablation_curves.png>]
-<figures/analytical_roofline.png, id=198, 1148.8521pt x 390.4989pt>
+
+Underfull \hbox (badness 1533) in paragraph at lines 185--186
+[]\OT1/ptm/m/n/10 (+20) We pro-file au-tore-gres-sive de-code at-ten-tion un-de
+r the
+ []
+
+[2]
+<figures/analytical_roofline.png, id=183, 1148.8521pt x 390.4989pt>
 File: figures/analytical_roofline.png Graphic file (type png)
 <use figures/analytical_roofline.png>
-Package pdftex.def Info: figures/analytical_roofline.png  used on input line 21
-5.
+Package pdftex.def Info: figures/analytical_roofline.png  used on input line 20
+8.
 (pdftex.def)             Requested size: 252.0pt x 85.6538pt.
-<figures/layerwise_correlation_heatmap.png, id=204, 1004.3121pt x 298.2342pt>
+ [3 <./figures/fig2_ablation_curves.png> <./figures/analytical_roofline.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 268--269
+[]\OT1/ptm/m/n/10 (+20) We mea-sure the Pear-son cor-re-la-tion co-ef-fi-cient
+ []
+
+<figures/layerwise_correlation_heatmap.png, id=207, 1004.3121pt x 298.2342pt>
 File: figures/layerwise_correlation_heatmap.png Graphic file (type png)
 <use figures/layerwise_correlation_heatmap.png>
 Package pdftex.def Info: figures/layerwise_correlation_heatmap.png  used on inp
-ut line 286.
+ut line 272.
 (pdftex.def)             Requested size: 516.0pt x 153.23509pt.
-<figures/rq3_transferability_heatmap.png, id=209, 1146.9249pt x 410.9754pt>
+<figures/rq3_transferability_heatmap.png, id=212, 1146.9249pt x 410.9754pt>
 File: figures/rq3_transferability_heatmap.png Graphic file (type png)
 <use figures/rq3_transferability_heatmap.png>
 Package pdftex.def Info: figures/rq3_transferability_heatmap.png  used on input
- line 319.
+ line 305.
 (pdftex.def)             Requested size: 252.0pt x 90.29572pt.
- [4 <./figures/analytical_roofline.png>]
-Underfull \vbox (badness 2343) has occurred while \output is active []
-
- [5 <./figures/layerwise_correlation_heatmap.png> <./figures/rq3_transferabilit
-y_heatmap.png>]
-Underfull \hbox (badness 5696) in paragraph at lines 341--342
-[]\OT1/ptm/b/n/10 (+20) Calibration Over-head\OT1/ptm/m/n/10 (+20) : The method
- re-quires a
- []
-
-(./main.bbl)
+[4] (./main.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -645,22 +661,23 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[6] (./main.aux)
+[5 <./figures/layerwise_correlation_heatmap.png> <./figures/rq3_transferability
+_heatmap.png>] (./main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: E4E2DBFA7C27F40B0266421E09C1BBFC;4249.
+(rerunfilecheck)             Checksum: B800A7635267EC7F285C4BC82A2B9BB2;4109.
  ) 
 Here is how much of TeX's memory you used:
- 13713 strings out of 476182
- 214500 string characters out of 5795595
- 1955975 words of memory out of 5000000
- 35078 multiletter control sequences out of 15000+600000
- 621121 words of font info for 366 fonts, out of 8000000 for 9000
+ 13666 strings out of 476182
+ 214090 string characters out of 5795595
+ 1956975 words of memory out of 5000000
+ 35077 multiletter control sequences out of 15000+600000
+ 619361 words of font info for 337 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,12n,79p,2235b,549s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,79p,1803b,550s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex9.pfb></usr/share/
@@ -686,10 +703,10 @@ rr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/
 texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/font
 s/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (6 pages, 1973983 bytes).
+Output written on main.pdf (5 pages, 1968189 bytes).
 PDF statistics:
- 375 PDF objects out of 1000 (max. 8388607)
- 300 compressed objects within 3 object streams
- 74 named destinations out of 1000 (max. 500000)
+ 365 PDF objects out of 1000 (max. 8388607)
+ 291 compressed objects within 3 object streams
+ 72 named destinations out of 1000 (max. 500000)
  72906 words of extra memory for PDF output out of 74296 (max. 10000000)
 

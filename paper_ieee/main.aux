@@ -8,66 +8,61 @@
 \citation{li2024snapkv}
 \citation{feng2025adakv}
 \citation{cake2025}
-\citation{zhang2024pyramidkv}
 \citation{lin2026infokv}
 \citation{jiang2024mixtral}
 \citation{bai2024qwenmoe}
 \citation{dai2024deepseekmoe}
 \@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {Mechanistic structure of standard sparse MoE architectures.} Self-attention is shared and dense across all sequence positions, while sparse expert routing occurs downstream in the FFN block. Each token accumulates a cross-layer routing signature $\mathcal  {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for token retention in the shared KV buffer.}}{1}{figure.1}\protected@file@percent }
-\newlabel{fig:architecture}{{1}{1}{\textbf {Mechanistic structure of standard sparse MoE architectures.} Self-attention is shared and dense across all sequence positions, while sparse expert routing occurs downstream in the FFN block. Each token accumulates a cross-layer routing signature $\mathcal {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for token retention in the shared KV buffer}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {MoE Mechanism.} Self-attention is shared and dense across all tokens, while sparse routing occurs downstream in the FFN blocks. Each token accumulates a cross-layer routing signature $\mathcal  {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for shared KV cache eviction.}}{1}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{1}{\textbf {MoE Mechanism.} Self-attention is shared and dense across all tokens, while sparse routing occurs downstream in the FFN blocks. Each token accumulates a cross-layer routing signature $\mathcal {R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for shared KV cache eviction}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-A}}Architectural Insight \& Motivation}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-B}}Key Contributions}{1}{subsection.1.2}\protected@file@percent }
 \citation{xiao2023streamingllm}
 \citation{zhang2023h2o}
 \citation{li2024snapkv}
 \citation{feng2025adakv}
 \citation{cake2025}
-\citation{zhang2024pyramidkv}
 \citation{lin2026infokv}
 \citation{liu2025pikv}
 \citation{sun2026moend}
 \citation{balashov2026triroute}
 \citation{dai2024deepseekmoe}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-A}}Architectural Reality \& Motivation}{2}{subsection.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-B}}Key Contributions}{2}{subsection.1.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}KV Cache Eviction in Dense LLMs}{2}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Disambiguation from Concurrent MoE Literature}{2}{subsection.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {III}Methodology}{2}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Expert Profile Calibration}{2}{subsection.3.1}\protected@file@percent }
 \citation{xiao2023streamingllm}
 \citation{williams2009roofline}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textbf  {Downstream Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math Reasoning), HumanEval (Code Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts).}}{3}{figure.2}\protected@file@percent }
-\newlabel{fig:ablation_curves}{{2}{3}{\textbf {Downstream Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math Reasoning), HumanEval (Code Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts)}{figure.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Routing Signature Saliency Score}{3}{subsection.3.2}\protected@file@percent }
-\newlabel{eq:routing_score}{{5}{3}{Routing Signature Saliency Score}{equation.3.5}{}}
-\newlabel{eq:saliency}{{6}{3}{Routing Signature Saliency Score}{equation.3.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Top-$B$ Selection \& Fused Cache Compaction}{3}{subsection.3.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Algorithmic flow of EKVA v2 token retention and fused cache compaction during the prompt prefill phase.}}{3}{figure.3}\protected@file@percent }
-\newlabel{alg:ekva}{{3}{3}{Algorithmic flow of EKVA v2 token retention and fused cache compaction during the prompt prefill phase}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Systems Roofline \& Hardware Characterization}{3}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}KV Cache Eviction in Dense LLMs}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Disambiguation from Concurrent MoE Research}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Methodology}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Expert Profile Calibration}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Routing Signature Saliency Score}{2}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:routing_score}{{5}{2}{Routing Signature Saliency Score}{equation.3.5}{}}
+\newlabel{eq:saliency}{{6}{2}{Routing Signature Saliency Score}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Top-$B$ Selection \& Fused Cache Compaction}{2}{subsection.3.3}\protected@file@percent }
 \citation{bai2024qwenmoe}
 \citation{jiang2024mixtral}
 \citation{dai2024deepseekmoe}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textbf  {Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math EM), HumanEval (Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts).}}{3}{figure.2}\protected@file@percent }
+\newlabel{fig:ablation_curves}{{2}{3}{\textbf {Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math EM), HumanEval (Pass@1), PG19 (Perplexity $\downarrow $), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts)}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Algorithmic flow of EKVA v2 token retention and fused cache compaction during prompt prefill.}}{3}{figure.3}\protected@file@percent }
+\newlabel{alg:ekva}{{3}{3}{Algorithmic flow of EKVA v2 token retention and fused cache compaction during prompt prefill}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Systems Roofline \& Hardware Speedup}{3}{section.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {A100 Roofline Analysis.} (Left) Roofline placement showing decode attention at $\text  {AI} \approx 0.9997\text  { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction across budget fractions.}}{3}{figure.4}\protected@file@percent }
+\newlabel{fig:roofline}{{4}{3}{\textbf {A100 Roofline Analysis.} (Left) Roofline placement showing decode attention at $\text {AI} \approx 0.9997\text { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction across budget fractions}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Empirical Evaluation}{3}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Experimental Setup}{3}{subsection.5.1}\protected@file@percent }
 \citation{feng2025adakv}
 \citation{lin2026infokv}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Hardware Systems Roofline Analysis on NVIDIA A100 GPU.} (Left) Roofline placement showing decode attention operating at $\text  {AI} \approx 0.9997\text  { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction relative to FullKV across budget fractions.}}{4}{figure.4}\protected@file@percent }
-\newlabel{fig:roofline}{{4}{4}{\textbf {Hardware Systems Roofline Analysis on NVIDIA A100 GPU.} (Left) Roofline placement showing decode attention operating at $\text {AI} \approx 0.9997\text { FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction relative to FullKV across budget fractions}{figure.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Empirical Evaluation}{4}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Experimental Configuration}{4}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Main Benchmark Results}{4}{subsection.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Cross-Signal Orthogonality Analysis}{4}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Benchmark evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test).}}{4}{table.1}\protected@file@percent }
+\newlabel{tab:main_results}{{I}{4}{Benchmark evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test)}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Results \& Analysis}{4}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Layer-wise Orthogonality Verification}{4}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Comparison with Layer- and Head-Adaptive Baselines}{4}{subsection.5.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals].}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:ablation}{{II}{4}{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals]}{table.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Component Ablation \& Discussion}{4}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Individual Saliency Signal Contribution}{4}{subsection.6.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute percentage point (pp) gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test).}}{5}{table.1}\protected@file@percent }
-\newlabel{tab:main_results}{{I}{5}{Comprehensive Multi-Benchmark Evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute percentage point (pp) gains over SnapKV. $^\dagger $ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test)}{table.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Layer-wise Orthogonality Analysis Across Transformer Depth.} Pearson correlation $\rho _l(R(x_t), \hat  {A}(x_t))$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers, mean $\rho = -0.006$), Mixtral-8x7B (32 layers, mean $\rho = +0.002$), and DeepSeek-MoE-16B (28 layers, mean $\rho = +0.002$). Near-zero correlation holds uniformly across all shallow, intermediate, and deep layers, confirming that routing signatures provide an independent retention signal throughout the network depth.}}{5}{figure.5}\protected@file@percent }
-\newlabel{fig:layerwise_correlation}{{5}{5}{\textbf {Layer-wise Orthogonality Analysis Across Transformer Depth.} Pearson correlation $\rho _l(R(x_t), \hat {A}(x_t))$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers, mean $\rho = -0.006$), Mixtral-8x7B (32 layers, mean $\rho = +0.002$), and DeepSeek-MoE-16B (28 layers, mean $\rho = +0.002$). Near-zero correlation holds uniformly across all shallow, intermediate, and deep layers, confirming that routing signatures provide an independent retention signal throughout the network depth}{figure.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals].}}{5}{table.2}\protected@file@percent }
-\newlabel{tab:ablation}{{II}{5}{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals]}{table.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Expert Specialization Dynamics}{5}{subsection.6.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \textbf  {Expert Semantic Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text  {Spec}_{e,l}$ across mathematical, coding, and natural language token classes, illustrating distinct functional niche distributions across layers.}}{5}{figure.6}\protected@file@percent }
-\newlabel{fig:specialization}{{6}{5}{\textbf {Expert Semantic Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text {Spec}_{e,l}$ across mathematical, coding, and natural language token classes, illustrating distinct functional niche distributions across layers}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Individual Saliency Contribution}{4}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Expert Specialization Dynamics}{4}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Limitations}{4}{subsection.6.3}\protected@file@percent }
 \bibstyle{IEEEtran}
 \bibdata{references}
 \bibcite{dao2023flashattention2}{1}
@@ -76,16 +71,18 @@
 \bibcite{li2024snapkv}{4}
 \bibcite{feng2025adakv}{5}
 \bibcite{cake2025}{6}
-\bibcite{zhang2024pyramidkv}{7}
-\bibcite{lin2026infokv}{8}
-\bibcite{jiang2024mixtral}{9}
-\bibcite{bai2024qwenmoe}{10}
-\bibcite{dai2024deepseekmoe}{11}
-\bibcite{liu2025pikv}{12}
-\bibcite{sun2026moend}{13}
-\bibcite{balashov2026triroute}{14}
-\bibcite{williams2009roofline}{15}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Limitations}{6}{subsection.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{6}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{6}{section*.2}\protected@file@percent }
-\gdef \@abspage@last{6}
+\bibcite{lin2026infokv}{7}
+\bibcite{jiang2024mixtral}{8}
+\bibcite{bai2024qwenmoe}{9}
+\bibcite{dai2024deepseekmoe}{10}
+\bibcite{liu2025pikv}{11}
+\bibcite{sun2026moend}{12}
+\bibcite{balashov2026triroute}{13}
+\bibcite{williams2009roofline}{14}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho _l(R(x_t), \hat  {A}(x_t))$ evaluated at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers), Mixtral-8x7B (32 layers), and DeepSeek-MoE-16B (28 layers). Near-zero correlation holds across all depths.}}{5}{figure.5}\protected@file@percent }
+\newlabel{fig:layerwise_correlation}{{5}{5}{\textbf {Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho _l(R(x_t), \hat {A}(x_t))$ evaluated at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers), Mixtral-8x7B (32 layers), and DeepSeek-MoE-16B (28 layers). Near-zero correlation holds across all depths}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \textbf  {Expert Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text  {Spec}_{e,l}$ across mathematical, coding, and natural language token classes.}}{5}{figure.6}\protected@file@percent }
+\newlabel{fig:specialization}{{6}{5}{\textbf {Expert Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text {Spec}_{e,l}$ across mathematical, coding, and natural language token classes}{figure.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{5}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{5}{section*.2}\protected@file@percent }
+\gdef \@abspage@last{5}

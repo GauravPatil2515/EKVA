@@ -51,11 +51,6 @@ Z.~Feng \emph{et~al.}, ``Ada-kv: Optimizing kv cache eviction for llms with
 A.~Chen \emph{et~al.}, ``Cake: Layer-wise attention-entropy kv cache allocation
   for large language models,'' \emph{arXiv preprint arXiv:2502.04189}, 2025.
 
-\bibitem{zhang2024pyramidkv}
-Y.~Zhang, Z.~Wang, J.~Du, M.~Zhang, and J.~Zhao, ``Pyramidkv: Dynamic kv cache
-  compression based on pyramidal information funneling,'' \emph{arXiv preprint
-  arXiv:2406.02069}, 2024.
-
 \bibitem{lin2026infokv}
 Z.~Lin \emph{et~al.}, ``Infokv: Information-aware key-value cache compression
   for long-context llms,'' \emph{arXiv preprint arXiv:2606.26875}, 2026.
