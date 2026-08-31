@@ -271,7 +271,14 @@ To test whether routing signatures provide distinct information from attention m
     \item \textbf{Mixtral-8x7B}: $\rho = +0.002$
     \item \textbf{DeepSeek-MoE-16B}: $\rho = +0.002$
 \end{itemize}
-The near-zero correlation demonstrates that routing history and query-key attention mass capture fundamentally independent dimensions of token importance, explaining why combining them yields synergistic retention gains.
+The near-zero correlation (Fig.~\ref{fig:correlation}) demonstrates that routing history and query-key attention mass capture fundamentally independent dimensions of token importance, explaining why combining them yields synergistic retention gains.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/rq2_correlation.png}
+\caption{\textbf{Cross-Signal Orthogonality Analysis.} Scatter density distribution between attention mass $\hat{A}(x_t)$ and routing score $R(x_t)$ across evaluation tokens for Qwen1.5-MoE-A2.7B ($\rho = -0.006$), Mixtral-8x7B ($\rho = +0.002$), and DeepSeek-MoE-16B ($\rho = +0.002$), demonstrating empirical orthogonality.}
+\label{fig:correlation}
+\end{figure}
 
 \subsection{Comparison with Layer-Adaptive Eviction}
 Table~\ref{tab:main_results} illustrates that layer-adaptive compression (CAKE) experiences catastrophic performance drops on complex reasoning tasks (GSM8K drops from 62.40\% FullKV down to 36.88\% on Qwen, and from 74.80\% down to 44.11\% on Mixtral). Because layer-adaptive methods severely deplete token capacity in shallow or intermediate layers, they break multi-step symbolic derivation chains. In contrast, EKVA v2 operates uniformly across the sequence dimension while preserving functionally specialized tokens, maintaining robust reasoning performance across all budget fractions (Fig.~\ref{fig:ablation_curves}).
@@ -299,6 +306,13 @@ Attention + Routing    & \checkmark & \checkmark & 56.40 & 48.90 & 88.70 \\
 }
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/rq3_transferability_heatmap.png}
+\caption{\textbf{Expert Semantic Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text{Spec}_e$ across mathematical, coding, and natural language token classes, illustrating distinct functional niche distributions.}
+\label{fig:specialization}
+\end{figure}
+
 \subsection{Individual Saliency Signal Contribution}
 We conduct an isolated component ablation on Qwen1.5-MoE-A2.7B at a 40\% cache budget (Table~\ref{tab:ablation}):
 \begin{itemize}
@@ -307,6 +321,9 @@ We conduct an isolated component ablation on Qwen1.5-MoE-A2.7B at a 40\% cache b
     \item \textbf{Attention + Routing} lifts performance to 56.40\% (+2.86 pp gain over attention-only).
     \item \textbf{Full EKVA v2} (including sink tokens and exponential recency) reaches **57.41\%**, confirming the necessity of all four unified terms in Eq.~(\ref{eq:saliency}).
 \end{itemize}
+
+\subsection{Expert Specialization Dynamics}
+As visualized in Fig.~\ref{fig:specialization}, different experts develop distinct semantic specializations during pretraining. When mathematical or code-heavy tokens pass through the network, they activate dedicated expert sub-circuits, resulting in high $\text{Spec}_e$ values that increase the routing niche score $R(x_t)$ in Eq.~(\ref{eq:routing_score}). This mechanism ensures that functionally critical tokens are retained in the shared KV cache even when their query-key attention mass is temporarily low.
 
 \subsection{Limitations}
 While EKVA v2 demonstrates consistent empirical gains and hardware speedups, we note the following operational scope and limitations:

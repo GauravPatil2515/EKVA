@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  1 SEP 2026 00:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  1 SEP 2026 00:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -540,7 +540,7 @@ Underfull \hbox (badness 3209) in paragraph at lines 55--56
 ely re-tain-ing high-
  []
 
-<figures/rq2_mechanistic_analysis.png, id=100, 1292.9103pt x 368.3361pt>
+<figures/rq2_mechanistic_analysis.png, id=104, 1292.9103pt x 368.3361pt>
 File: figures/rq2_mechanistic_analysis.png Graphic file (type png)
 <use figures/rq2_mechanistic_analysis.png>
 Package pdftex.def Info: figures/rq2_mechanistic_analysis.png  used on input li
@@ -556,7 +556,7 @@ Underfull \hbox (badness 2990) in paragraph at lines 111--113
 rm a
  []
 
-<figures/fig2_ablation_curves.png, id=147, 1293.1512pt x 354.3639pt>
+<figures/fig2_ablation_curves.png, id=151, 1293.1512pt x 354.3639pt>
 File: figures/fig2_ablation_curves.png Graphic file (type png)
 <use figures/fig2_ablation_curves.png>
 Package pdftex.def Info: figures/fig2_ablation_curves.png  used on input line 1
@@ -601,19 +601,32 @@ Underfull \hbox (badness 10000) in paragraph at lines 179--179
 V[] \OMS/cmsy/m/n/9  
  []
 
-<figures/analytical_roofline.png, id=178, 1148.8521pt x 390.4989pt>
+<figures/analytical_roofline.png, id=182, 1148.8521pt x 390.4989pt>
 File: figures/analytical_roofline.png Graphic file (type png)
 <use figures/analytical_roofline.png>
 Package pdftex.def Info: figures/analytical_roofline.png  used on input line 20
 7.
 (pdftex.def)             Requested size: 252.0pt x 85.6538pt.
 [3 <./figures/fig2_ablation_curves.png>]
-Underfull \hbox (badness 5696) in paragraph at lines 316--317
+<figures/rq2_correlation.png, id=205, 1292.6694pt x 353.1594pt>
+File: figures/rq2_correlation.png Graphic file (type png)
+<use figures/rq2_correlation.png>
+Package pdftex.def Info: figures/rq2_correlation.png  used on input line 278.
+(pdftex.def)             Requested size: 252.0pt x 68.84694pt.
+<figures/rq3_transferability_heatmap.png, id=208, 1146.9249pt x 410.9754pt>
+File: figures/rq3_transferability_heatmap.png Graphic file (type png)
+<use figures/rq3_transferability_heatmap.png>
+Package pdftex.def Info: figures/rq3_transferability_heatmap.png  used on input
+ line 311.
+(pdftex.def)             Requested size: 252.0pt x 90.29572pt.
+ [4 <./figures/analytical_roofline.png> <./figures/rq2_correlation.png> <./figu
+res/rq3_transferability_heatmap.png>]
+Underfull \hbox (badness 5696) in paragraph at lines 333--334
 []\OT1/ptm/b/n/10 (+20) Calibration Over-head\OT1/ptm/m/n/10 (+20) : The method
  re-quires a
  []
 
-[4 <./figures/analytical_roofline.png>] (./main.bbl)
+(./main.bbl [5])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -625,22 +638,24 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[5] (./main.aux)
+[6
+
+] (./main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 6112605E9F2235C14C2AAC255ADB50D9;3974.
+(rerunfilecheck)             Checksum: 890015D49EDE8C54EB16F9E49A7740D3;4188.
  ) 
 Here is how much of TeX's memory you used:
- 13688 strings out of 476182
- 213706 string characters out of 5795595
- 1952975 words of memory out of 5000000
- 35061 multiletter control sequences out of 15000+600000
- 620933 words of font info for 363 fonts, out of 8000000 for 9000
+ 13713 strings out of 476182
+ 214389 string characters out of 5795595
+ 1954975 words of memory out of 5000000
+ 35078 multiletter control sequences out of 15000+600000
+ 621115 words of font info for 366 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,12n,79p,2139b,478s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,79p,2139b,608s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex9.pfb></usr/share/
@@ -666,10 +681,10 @@ rr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/
 texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/font
 s/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (5 pages, 1356640 bytes).
+Output written on main.pdf (6 pages, 1858387 bytes).
 PDF statistics:
- 353 PDF objects out of 1000 (max. 8388607)
- 283 compressed objects within 3 object streams
- 70 named destinations out of 1000 (max. 500000)
- 72888 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 372 PDF objects out of 1000 (max. 8388607)
+ 297 compressed objects within 3 object streams
+ 74 named destinations out of 1000 (max. 500000)
+ 72906 words of extra memory for PDF output out of 74296 (max. 10000000)
 
