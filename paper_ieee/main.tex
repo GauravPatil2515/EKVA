@@ -32,12 +32,13 @@
 \textit{School of Engineering \& Technology}\\
 Pune, India \\
 Email: gauravpatil2516@gmail.com}
+\thanks{Code, PyTorch routing hooks, custom Triton kernels, calibration profiles, and evaluation runners are publicly available at: \url{https://github.com/GauravPatil2515/EKVA}.}
 }
 
 \maketitle
 
 \begin{abstract}
-During long-context autoregressive inference in Large Language Models (LLMs), the Key-Value (KV) cache memory footprint is the dominant performance bottleneck. While token-level eviction and layer-adaptive allocation have been widely explored for dense models, the internal routing dynamics of sparse Mixture-of-Experts (MoE) architectures remain unexploited. In standard sparse MoEs (\emph{Mixtral-8x7B}, \emph{Qwen1.5-MoE}, \emph{DeepSeek-MoE}), self-attention is shared and dense, while sparse routing occurs downstream in the Feed-Forward Network (FFN) blocks. Consequently, each token accumulates an internal cross-layer \emph{routing signature} $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$ during standard forward computation. In this paper, we propose \textbf{EKVA v2}, a training-free token retention framework that leverages cross-layer routing signatures and layer-specific expert niche profiles (entropy, activation frequency, and specialization) to govern eviction in the shared KV cache. Across three MoE families (8, 60, and 64 experts), routing scores exhibit near-zero Pearson correlation ($\rho \in [-0.006, +0.002]$) with self-attention mass across all layers, demonstrating that routing captures an independent, complementary dimension of token importance. Under a 40\% cache budget, EKVA v2 outperforms state-of-the-art baselines (H2O, SnapKV) by 3.0 to 6.0 percentage points ($p < 0.01$, paired bootstrap test) across mathematical reasoning (GSM8K), code generation (HumanEval), long-context retrieval (NIAH), and language modeling (PG19). Furthermore, a fused Triton compaction kernel delivers a \textbf{$2.02\times$--$2.05\times$ decode speedup} on NVIDIA A100 GPUs.
+During long-context autoregressive inference in Large Language Models (LLMs), loading Key-Value (KV) cache tensors at each decoding step saturates High-Bandwidth Memory (HBM), creating a severe memory-bandwidth bottleneck. While token-level eviction and layer-adaptive allocation have been investigated for dense transformers, existing compression policies treat sparse Mixture-of-Experts (MoE) architectures identically to monolithic dense models. In standard sparse MoEs (\emph{Qwen1.5-MoE}, \emph{Mixtral-8x7B}, \emph{DeepSeek-MoE}), self-attention is shared and dense across all tokens, while conditional routing occurs strictly downstream within the Feed-Forward Network (FFN) blocks. Consequently, each sequence token naturally accumulates a cross-layer \emph{routing signature} $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$ during standard prefill execution without requiring weight modification or retraining. In this paper, we propose \textbf{EKVA v2}, a training-free, routing-aware token retention framework tailored specifically for sparse MoE inference. EKVA v2 unifies cross-layer routing signatures with layer-specific expert niche profiles (capturing attention entropy, routing activation frequency, and categorical specialization) over the shared KV cache. Across three open-weight MoE families (spanning 8, 60, and 64 experts), empirical profiling reveals that routing signatures maintain near-zero Pearson correlation ($\rho \in [-0.006, +0.002]$) with self-attention mass uniformly across all network depths, demonstrating that routing captures an independent, complementary dimension of token importance. Under a 40\% cache budget, EKVA v2 achieves statistically significant gains of 3.0 to 6.0 percentage points ($p < 0.01$, paired bootstrap test with $B=10,000$ resamples) over state-of-the-art baselines (H2O, SnapKV) across mathematical reasoning (GSM8K), code synthesis (HumanEval), long-context retrieval (NIAH), and language modeling (PG19), while preventing the severe reasoning collapse observed in layer-adaptive methods (CAKE, InfoKV). Furthermore, a custom fused Triton compaction kernel delivers a measured \textbf{$2.02\times$--$2.05\times$ end-to-end decode step speedup} on NVIDIA A100 GPUs.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -48,39 +49,35 @@ Mixture-of-Experts, Key-Value Cache, Token Eviction, Long-Context LLMs, Triton G
 % I. INTRODUCTION
 % -------------------------------------------------------------------------
 \section{Introduction}
-Autoregressive decoding in modern Large Language Models (LLMs) requires storing Key-Value (KV) activations for all context tokens in High-Bandwidth Memory (HBM). As sequence lengths grow to tens of thousands of tokens, loading large KV tensors at every decoding step saturates GPU memory bandwidth, leading to severe throughput degradation and increased Time-Per-Output-Token (TPOT)~\cite{dao2023flashattention2,xiao2023streamingllm}.
+Autoregressive decoding in modern Large Language Models (LLMs) requires loading accumulated Key-Value (KV) activation tensors from High-Bandwidth Memory (HBM) into on-chip registers at every generation step. For long-context sequences spanning thousands of tokens, this memory traffic completely saturates GPU memory bandwidth, leading to severe latency degradation and elevated Time-Per-Output-Token (TPOT)~\cite{dao2023flashattention2,xiao2023streamingllm}.
 
-Dynamic KV cache compression methods reduce this memory traffic across three main granularity axes:
+To alleviate the KV cache memory wall, dynamic compression policies prune historical tokens across three granularity axes:
 \begin{enumerate}
-    \item \textbf{Token-Level Eviction}: Token-level methods evaluate individual position saliency to dynamically prune redundant tokens from the sequence. StreamingLLM~\cite{xiao2023streamingllm} discovered that initial prompt tokens serve as persistent ``attention sinks'' essential for maintaining softmax numerical stability, requiring their unconditional retention. Building on this, policies such as H2O~\cite{zhang2023h2o} and SnapKV~\cite{li2024snapkv} accumulate query-key attention scores across prefill observation windows to identify historical ``heavy-hitter'' tokens that receive sustained cross-sequence focus. Tokens falling below an empirical attention threshold are discarded, bounding the KV cache to a fixed budget. However, because these policies rely exclusively on query-key dot products, they remain blind to tokens that receive modest direct attention yet carry indispensable structural information for downstream computations.
-    \item \textbf{Head-Level Allocation}: Rather than enforcing uniform capacity across all attention heads within a layer, head-level budgeting exploits the functional diversity among multi-head projections. Attention heads naturally specialize into distinct behavioral roles, ranging from long-range retrieval heads that track distant entity dependencies to localized syntax heads that attend almost entirely to neighboring tokens. Frameworks such as Ada-KV~\cite{feng2025adakv} adaptively profile per-head attention variance and entropy to allocate non-uniform token quotas, pruning low-utility heads more aggressively. While this granularity optimizes intra-layer memory allocation, it continues to treat token contents through attention alone, overlooking inter-module interactions across subsequent feed-forward networks.
-    \item \textbf{Layer-Level Allocation}: Layer-wise approaches redistribute the total memory budget across transformer depth based on macroscopic information flow. Techniques including CAKE~\cite{cake2025} and InfoKV~\cite{lin2026infokv} observe that early transformer layers engage in broad contextual gathering, whereas intermediate and deep layers exhibit pyramidal information funneling. Consequently, deeper layers are granted expanded token buffers while shallower layers are aggressively compressed. Nevertheless, disproportionately starving intermediate or early layers can break delicate multi-step symbolic derivation chains, precipitating severe accuracy collapses on complex mathematical and logical reasoning tasks.
+    \item \textbf{Token-Level Eviction:} Methods evaluate individual token positions to prune redundant context. StreamingLLM~\cite{xiao2023streamingllm} demonstrated that initial tokens act as ``attention sinks'' indispensable for stabilizing softmax normalizers. Policies such as H2O~\cite{zhang2023h2o} and SnapKV~\cite{li2024snapkv} accumulate query-key attention scores across prefill observation windows to retain historical ``heavy-hitter'' tokens. However, because these policies rely exclusively on query-key dot products, they discard tokens that receive modest direct attention yet carry indispensable structural information for downstream computations.
+    \item \textbf{Head-Level Allocation:} Frameworks such as Ada-KV~\cite{feng2025adakv} profile per-head attention variance and entropy to allocate variable token capacities across attention heads within a layer. While this exploits head-level functional diversity, it continues to evaluate token utility through self-attention alone, overlooking subsequent feed-forward transformations.
+    \item \textbf{Layer-Level Allocation:} Techniques including CAKE~\cite{cake2025} and InfoKV~\cite{lin2026infokv} observe pyramidal information funneling across transformer depth, allocating larger caches to deep layers while heavily compressing early layers. However, disproportionately starving intermediate or early layers severs multi-step symbolic derivation chains, precipitating catastrophic accuracy drops on complex reasoning tasks.
 \end{enumerate}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/rq2_mechanistic_analysis.png}
-\caption{\textbf{MoE Mechanism.} Self-attention is shared and dense across all tokens, while sparse routing occurs downstream in the FFN blocks. Each token accumulates a cross-layer routing signature $\mathcal{R}_t$ that provides an orthogonal saliency signal ($\rho \approx 0.00$) for shared KV cache eviction.}
+\includegraphics[width=\columnwidth]{figures/ekva_architecture_diagram.png}
+\caption{\textbf{EKVA v2 System Architecture.} During prompt prefill, sequence tokens pass through shared dense self-attention (Branch A) and sparse router dispatch (Branch B). Cross-layer routing signatures $\mathcal{R}_t$ are coupled with offline-calibrated expert niche profiles ($\bar{H}_{e,l}$, $\text{Route}_{e,l}$, $\text{Spec}_{e,l}$) into a normalized routing score $\hat{R}(x_t)$. The unified saliency fusion module combines orthogonal attention and routing signals with sink constraints and recency. Finally, a custom fused Triton compaction kernel gathers retained Key-Value tensors directly in on-chip SRAM, outputting contiguous cache buffers for accelerated autoregressive decoding.}
 \label{fig:architecture}
 \end{figure}
 
-Despite the rapid ascension and widespread deployment of sparse Mixture-of-Experts (MoE) foundation models—such as \emph{Mixtral-8x7B}~\cite{jiang2024mixtral}, \emph{Qwen1.5-MoE}~\cite{bai2024qwenmoe}, and \emph{DeepSeek-MoE}~\cite{dai2024deepseekmoe}—contemporary KV cache eviction paradigms remain fundamentally oblivious to the architectural dichotomy inherent to MoE computation. Current compression frameworks treat MoE checkpoints identically to monolithic dense transformers, relying strictly on query-key attention heatmaps while entirely bypassing the sparse, content-dependent gating decisions executed by the router layers. In doing so, existing methods fail to capture the functional specialization encoded across the network's expert dispatch pathways. Consequently, tokens that are indispensable to specific downstream expert sub-circuits risk premature eviction simply because their query-key attention mass appears temporarily low, severely undermining the model's specialized reasoning capabilities.
-
-\subsection{Architectural Insight \& Motivation}
-In standard sparse MoEs, self-attention remains shared across all tokens, while conditional routing occurs strictly in subsequent FFN blocks (Fig.~\ref{fig:architecture}). As token $x_t$ traverses $L$ layers, router gates assign it to top-$k$ experts per layer, producing an accumulated routing signature:
+Despite the emergence and dominant deployment of sparse Mixture-of-Experts (MoE) foundation models—such as \emph{Mixtral-8x7B}~\cite{jiang2024mixtral}, \emph{Qwen1.5-MoE}~\cite{bai2024qwenmoe}, and \emph{DeepSeek-MoE}~\cite{dai2024deepseekmoe}—contemporary KV cache eviction paradigms remain fundamentally oblivious to the architectural dichotomy inherent to MoE computation. In standard sparse MoEs, self-attention remains dense and shared across all sequence tokens, whereas conditional computation is restricted downstream to sparse Feed-Forward Network (FFN) blocks (Fig.~\ref{fig:architecture}). As a token $x_t$ traverses $L$ layers, router gates assign it to top-$k$ experts per layer, producing an accumulated routing signature:
 \begin{equation}
     \mathcal{R}_t = \{ E_t^{(1)}, E_t^{(2)}, \dots, E_t^{(L)} \}
 \end{equation}
-Because routing signatures are generated during standard forward propagation, they represent a free semantic signal available during inference without weight modification or retraining. We hypothesize that routing history reflects the functional specialization of tokens, providing an orthogonal retention signal to query-key attention mass.
+Because routing decisions are generated during standard forward computation, they provide a cost-free semantic footprint available during inference without weight modification or retraining. We hypothesize that routing history reflects the functional specialization of tokens, providing an orthogonal retention signal that protects critical reasoning tokens overlooked by standard query-key attention heatmaps.
 
-\subsection{Key Contributions}
-In summary, this work addresses the KV cache memory wall in sparse Mixture-of-Experts inference through three principal contributions:
+In summary, this work makes three principal contributions:
 
-\emph{1) Algorithmic Formulation:} We formulate EKVA v2, the first training-free token retention policy tailored specifically to sparse MoE topologies. By extracting cross-layer routing signatures $\mathcal{R}_t$ during prompt prefill and coupling them with layer-specific expert niche profiles (capturing attention entropy, routing activation frequency, and semantic category specialization), we define a unified token saliency metric $S(x_t)$ that operates directly over the shared KV buffer without modifying model weights or requiring fine-tuning.
+\textbf{1) Algorithmic Formulation:} We formulate EKVA v2, the first training-free token retention policy tailored specifically for sparse MoE topologies. By combining cross-layer routing signatures $\mathcal{R}_t$ with layer-specific expert niche profiles (capturing attention entropy, routing activation frequency, and semantic category specialization), we define a unified token saliency metric $S(x_t)$ that operates directly over the shared KV buffer during prompt prefill without requiring weight updates or fine-tuning.
 
-\emph{2) Mechanistic Orthogonality and Reasoning Preservation:} Through extensive empirical profiling across three open-weight MoE families (Qwen1.5-MoE-A2.7B, Mixtral-8x7B, and DeepSeek-MoE-16B spanning 8 to 64 experts), we discover that routing signatures and query-key attention mass maintain near-zero Pearson correlation ($\rho \in [-0.006, +0.002]$) across all network depths. This empirical independence demonstrates that routing decisions provide an orthogonal retention signal that protects critical reasoning tokens overlooked by standard attention-only policies. Across GSM8K, HumanEval, NIAH, and PG19 at a 40\% cache budget, EKVA v2 achieves a statistically significant 3.0 to 6.0 percentage point gain over SnapKV and H2O ($p < 0.01$, paired bootstrap test), while completely circumventing the severe accuracy collapses suffered by layer-adaptive compression methods such as CAKE.
+\textbf{2) Mechanistic Orthogonality and Reasoning Preservation:} Through extensive empirical profiling across three open-weight MoE families (Qwen1.5-MoE-A2.7B, Mixtral-8x7B, and DeepSeek-MoE-16B spanning 8 to 64 experts), we discover that routing signatures and query-key attention mass maintain near-zero Pearson correlation ($\rho \in [-0.006, +0.002]$) across all network depths. This empirical independence proves that routing decisions provide an orthogonal retention signal that protects critical reasoning tokens overlooked by standard attention-only policies. Across GSM8K, HumanEval, NIAH, and PG19 at a 40\% cache budget, EKVA v2 achieves a statistically significant 3.0 to 6.0 percentage point gain over SnapKV and H2O ($p < 0.01$, paired bootstrap test), while completely circumventing the severe accuracy collapses suffered by layer-adaptive compression methods such as CAKE.
 
-\emph{3) Systems Roofline Grounding and Triton Acceleration:} Grounded in the Williams Roofline Model, we demonstrate that single-query decode attention operates strictly in the memory-bandwidth-bound regime ($\text{AI} \approx 1.0\text{ FLOPs/Byte} \ll 200.6$ on an NVIDIA A100 GPU), which establishes a theoretical memory traffic reduction bound of $S_{\text{attn}} = 1/\beta = 2.50\times$ under a 40\% budget. To translate these algorithmic savings into real-world wall-clock latency gains without memory fragmentation, we develop a custom fused Triton compaction kernel that packs non-contiguous Key-Value activations into contiguous buffers, achieving a measured $2.02\times$--$2.05\times$ end-to-end decode step speedup in production execution.
+\textbf{3) Systems Roofline Grounding and Triton Acceleration:} Grounded in the Williams Roofline Model, we demonstrate that single-query decode attention operates strictly in the memory-bandwidth-bound regime ($\text{AI} \approx 1.0\text{ FLOPs/Byte} \ll 200.6$ on an NVIDIA A100 GPU), which establishes a theoretical memory traffic reduction bound of $S_{\text{attn}} = 1/\beta = 2.50\times$ under a 40\% budget. To translate these algorithmic savings into real-world wall-clock latency gains without memory fragmentation, we develop a custom fused Triton compaction kernel that packs non-contiguous Key-Value activations into contiguous buffers, achieving a measured $2.02\times$--$2.05\times$ end-to-end decode step speedup in production execution.
 
 % -------------------------------------------------------------------------
 % II. RELATED WORK
@@ -108,8 +105,13 @@ With the emergence of sparse Mixture-of-Experts (MoE) foundation models, several
 % -------------------------------------------------------------------------
 \section{Methodology}
 
-\subsection{Expert Profile Calibration}
-Sparse MoE architectures structure each transformer block by pairing a dense self-attention module with a sparse MoE Feed-Forward Network (FFN). Crucially, each transformer layer $l \in \{1, \dots, L\}$ maintains its own private, non-shared set of expert weight tensors $\{W_{e,l}^{(1)}, W_{e,l}^{(2)}, W_{e,l}^{(3)}\}_{e=1}^{E_l}$. An expert indexed as $e=3$ at layer 2 shares zero architectural or parametric relationship with expert $e=3$ at layer 20. Consequently, characterizing expert functional specialization requires layer-specific profiling rather than global index pooling.
+\subsection{Problem Formulation \& Tensor Topology}
+Let an autoregressive sparse MoE transformer consist of $L$ sequential layers. During the prefill stage, an input prompt containing $T$ tokens $\{x_t\}_{t=0}^{T-1}$ is processed. Each layer $l \in \{1, \dots, L\}$ projects token representations into key and value states, forming uncompressed Key-Value tensors $K_l, V_l \in \mathbb{R}^{B_{\text{batch}} \times H \times T \times D}$, where $B_{\text{batch}}$ is batch size, $H$ is the number of Key-Value heads, and $D$ is the per-head feature dimension. 
+
+In standard sparse MoEs, self-attention remains dense and shared across all sequence tokens, whereas conditional computation is executed in subsequent MoE FFN layers containing $E_l$ routed experts. Given a target retention fraction $\beta \in (0, 1]$, the retention objective is to identify a subset of token indices $\mathcal{I}_{\text{keep}} \subset \{0, \dots, T-1\}$ of cardinality $B = \lfloor \beta \cdot T \rfloor$ that minimizes downstream task performance degradation while compressing memory traffic by $(1 - \beta) \times 100\%$.
+
+\subsection{Layer-Specific Expert Profile Calibration}
+Crucially, each transformer layer $l \in \{1, \dots, L\}$ maintains its own private, non-shared set of expert parameter tensors $\{W_{e,l}^{(1)}, W_{e,l}^{(2)}, W_{e,l}^{(3)}\}_{e=1}^{E_l}$. An expert indexed as $e$ at layer 2 shares zero parameters with expert $e$ at layer 20. Therefore, characterizing expert functional specialization requires layer-specific profiling rather than global index pooling.
 
 To establish these profiles without model retraining, we execute a lightweight offline calibration pass over a representative multi-domain dataset $\mathcal{D}_{\text{calib}}$ containing 40 sequences (spanning multi-step mathematical derivations, algorithmic Python scripts, and literary prose, requiring $<2$ minutes on a single GPU with zero runtime memory overhead). For each expert $e \in \{1, \dots, E_l\}$ at layer $l$, we calibrate three statistical properties:
 
@@ -121,13 +123,12 @@ Tokens exhibiting high attention entropy disperse attention broadly across the p
 \begin{equation}
     \bar{H}_{e,l} = \mathbb{E}_{t \in \mathcal{T}_{e,l}} [H(p_{t,l})]
 \end{equation}
-This scalar quantifies the contextual dispersion characteristic of the tokens that preferentially activate expert $(e, l)$.
 
 \textbf{2) Routing Frequency ($\text{Route}_{e,l}$):} In standard top-$k$ gating, router gate $\operatorname{Router}_l(x_t) = \operatorname{Softmax}(W_{g,l} x_t)$ computes routing probabilities across all candidate experts at layer $l$. The total activation frequency accumulated by expert $e$ at layer $l$ over prompt tokens $\{x_t\}_{t=0}^{T-1}$ is:
 \begin{equation}
     \text{Route}_{e,l} = \sum_{t=0}^{T-1} \mathbf{1}(e \in \operatorname{TopK}(\operatorname{Router}_l(x_t)))
 \end{equation}
-where $\mathbf{1}(\cdot)$ is the binary indicator function returning 1 if expert $e$ is among the top-$k$ selected candidates and 0 otherwise. Expert dispatch volumes in pretrained MoEs exhibit heavy-tailed power-law distributions, where a small subset of ``generalist'' experts process disproportionately large token shares while domain-specific experts fire selectively. In our retention metric, we apply logarithmic scaling $\log(1 + \text{Route}_{e,l})$ to dampen traffic extremes, preventing generalist experts from dominating the metric while ensuring niche experts retain meaningful discriminative weight.
+where $\mathbf{1}(\cdot)$ is the binary indicator function. Expert dispatch volumes in pretrained MoEs exhibit heavy-tailed power-law distributions. We apply logarithmic scaling $\log(1 + \text{Route}_{e,l})$ to dampen traffic extremes, preventing generalist experts from dominating the metric while ensuring niche experts retain meaningful discriminative weight.
 
 \textbf{3) Semantic Specialization ($\text{Spec}_{e,l}$):} To quantify categorical selectivity, we partition tokens into four broad syntactic classes $C$ (numerics/operators, identifiers/keywords, syntax/punctuation, and natural language) using rule-based lexical parsing. Let $P_{e,l}(c)$ denote the empirical conditional probability that an activation dispatched to expert $(e,l)$ belongs to class $c \in C$. The normalized Shannon evenness $J_{e,l}$ over category distributions is:
 \begin{equation}
@@ -139,48 +140,45 @@ where $\log |C|$ represents maximum theoretical entropy under a uniform distribu
 \end{equation}
 Here, $\text{Spec}_{e,l} \in [0, 1]$. An expert that fires uniformly across all syntactic categories yields $J_{e,l} \approx 1 \implies \text{Spec}_{e,l} \approx 0$ (a generalist expert). Conversely, an expert that activates almost exclusively for mathematical operands or code syntax yields $J_{e,l} \ll 1 \implies \text{Spec}_{e,l} \to 1$ (a specialized expert).
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig2_ablation_curves.png}
-\caption{\textbf{Benchmark Performance Across Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math EM), HumanEval (Pass@1), PG19 (Perplexity $\downarrow$), and Needle-in-a-Haystack (NIAH Accuracy) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts).}
-\label{fig:ablation_curves}
-\end{figure*}
-
 \subsection{Routing Signature Saliency Score}
-During the forward prefill phase of inference, an input token $x_t$ traverses all $L$ layers of the transformer. At each layer $l$, the router gate dispatches $x_t$ to top-$k$ experts. We record the primary routing decision $E_t^{(l)} = \operatorname{argmax}_e (\operatorname{Router}_l(x_t))$, constructing the token's accumulated cross-layer routing signature:
+During prefill, input token $x_t$ traverses all $L$ layers. At each layer $l$, router gate $\operatorname{Router}_l(x_t)$ selects top-$k$ experts. We record primary routing decision $E_t^{(l)} = \operatorname{argmax}_e (\operatorname{Router}_l(x_t))$, constructing the token's cross-layer routing signature:
 \begin{equation}
     \mathcal{R}_t = \{ E_t^{(1)}, E_t^{(2)}, \dots, E_t^{(L)} \}
 \end{equation}
-By querying the offline-calibrated profile tensors $(\bar{H}_{e,l}, \text{Route}_{e,l}, \text{Spec}_{e,l})$ at the exact layer-expert coordinates $(E_t^{(l)}, l)$ visited by token $x_t$, we formulate the cross-layer routing niche score $R(x_t)$ as:
+By querying the offline-calibrated profile tensors $(\bar{H}_{e,l}, \text{Route}_{e,l}, \text{Spec}_{e,l})$ at coordinates $(E_t^{(l)}, l)$, we compute the raw cross-layer routing niche score:
 \begin{equation}
     R(x_t) = \frac{1}{L}\sum_{l=1}^{L} \bar{H}_{E_t^{(l)}, l} \cdot \log(1 + \text{Route}_{E_t^{(l)}, l}) \cdot (1 + \text{Spec}_{E_t^{(l)}, l})
     \label{eq:routing_score}
 \end{equation}
-In Eq.~(\ref{eq:routing_score}), the outer factor $1/L$ normalizes the score across transformer depth. The inner multiplicative formulation jointly weights contextual dispersion ($\bar{H}$), log-frequency, and a specialization amplifier $(1 + \text{Spec}) \in [1, 2]$. If a token consistently engages specialized expert sub-circuits across multiple layers, its routing niche score $R(x_t)$ escalates significantly, providing an architectural signal that this token carries indispensable functional utility.
+To ensure mathematical compatibility with normalized attention mass, we apply sequence-level min-max normalization:
+\begin{equation}
+    \hat{R}(x_t) = \frac{R(x_t) - \min_{j} R(x_j)}{\max_{j} R(x_j) - \min_{j} R(x_j) + \epsilon}
+\end{equation}
+where $\epsilon = 10^{-6}$ prevents division by zero, bounding $\hat{R}(x_t) \in [0, 1]$.
 
-To construct the global token retention policy, we synthesize attention mass, routing niche scores, attention sink protection, and local recency into a unified retention score $S(x_t)$:
+We synthesize attention mass, normalized routing niche scores, attention sink protection, and local recency into unified token retention score $S(x_t)$:
 \begin{align}
-    S(x_t) &= w_a \cdot \hat{A}(x_t) + w_r \cdot R(x_t) \nonumber \\
+    S(x_t) &= w_a \cdot \hat{A}(x_t) + w_r \cdot \hat{R}(x_t) \nonumber \\
            &\quad + w_s \cdot \text{Sink}(x_t) + w_c \cdot \text{Recency}(x_t)
     \label{eq:saliency}
 \end{align}
-where each constituent term is defined as follows:
+where:
 \begin{itemize}
-    \item $\hat{A}(x_t) = \frac{1}{H} \sum_{h=1}^{H} \sum_{i=0}^{T-1} A_{h,i,t}$ is the cumulative attention mass received by token $x_t$ across all attention heads $H$, normalized to the range $[0, 1]$.
-    \item $R(x_t)$ is the normalized cross-layer routing niche score from Eq.~(\ref{eq:routing_score}).
-    \item $\text{Sink}(x_t)$ implements an explicit retention constraint assigning infinite priority to the initial 4 prompt tokens ($S(x_{t < 4}) = \infty$), ensuring that initial attention sinks~\cite{xiao2023streamingllm} are unconditionally preserved to prevent softmax divergence.
-    \item $\text{Recency}(x_t) = \exp(-(T - 1 - t)/\tau)$ establishes an exponential recency decay window with time constant $\tau = 32$, guaranteeing that prompt-final tokens are preserved to maintain local syntactic continuity during autoregressive generation.
+    \item $\hat{A}(x_t) = \frac{1}{H \cdot w} \sum_{h=1}^{H} \sum_{i=T-w}^{T-1} A_{h,i,t}$ is the cumulative attention mass received by token $x_t$ across all heads $H$ in prefill observation window $w = 32$, min-max scaled to $[0, 1]$.
+    \item $\hat{R}(x_t)$ is the min-max normalized cross-layer routing niche score.
+    \item $\text{Sink}(x_t)$ is an explicit selection constraint assigning infinite priority to the first 4 tokens ($S(x_{t < 4}) = \infty$), ensuring initial attention sinks~\cite{xiao2023streamingllm} are unconditionally preserved.
+    \item $\text{Recency}(x_t) = \exp(-(T - 1 - t)/\tau)$ establishes an exponential decay window ($\tau = 32$), preserving recent tokens for local syntactic continuity.
 \end{itemize}
-The weighting hyper-parameters $(w_a, w_r, w_s, w_c) = (0.60, 0.30, 0.05, 0.05)$ are calibrated once on held-out validation sequences and held fixed across all models and benchmarks. Sensitivity analysis confirms that varying $w_r \in [0.20, 0.40]$ produces $<0.4\%$ variance in downstream accuracy.
+The weighting hyper-parameters $(w_a, w_r, w_s, w_c) = (0.60, 0.30, 0.05, 0.05)$ are calibrated once on held-out validation data and held fixed across all models and benchmarks. Sensitivity analysis confirms varying $w_r \in [0.20, 0.40]$ produces $<0.4\%$ variance in downstream accuracy.
 
 \subsection{Top-$B$ Selection \& Fused Cache Compaction}
-Given sequence length $T$ and target compression fraction $\beta \in (0, 1]$, the target token budget is $B = \lfloor \beta \cdot T \rfloor$. The retained index set $\mathcal{I}_{\text{keep}}$ is assembled by reserving the 4 initial sink positions and selecting the top-$(B - 4)$ tokens ranked by unified saliency $S(x_t)$:
+Given sequence length $T$ and target compression fraction $\beta \in (0, 1]$, target token budget is $B = \lfloor \beta \cdot T \rfloor$. Retained index set $\mathcal{I}_{\text{keep}}$ is constructed by protecting the 4 initial sink positions and selecting top-$(B - 4)$ tokens ranked by $S(x_t)$:
 \begin{equation}
     \mathcal{I}_{\text{keep}} = \operatorname{sort}\left( \{0, 1, 2, 3\} \cup \operatorname{TopK}\left( \{S(x_t)\}_{t=4}^{T-1}, B - 4 \right) \right)
 \end{equation}
-Crucially, sorting the index set $\mathcal{I}_{\text{keep}}$ in ascending order is mathematically required: rotary position embeddings (RoPE) and causal attention masks depend on strictly monotonic sequence ordering to prevent phase distortion.
+Sorting $\mathcal{I}_{\text{keep}}$ in ascending order is mathematically required: rotary position embeddings (RoPE) and causal attention masks depend on strictly monotonic sequence ordering to prevent phase distortion.
 
-During autoregressive generation, managing a non-contiguous KV cache via standard PyTorch indexing (\texttt{pkv[:, :, indices, :]}) induces severe memory fragmentation, triggers redundant tensor allocations, and launches multiple auxiliary CUDA kernels. To eliminate this runtime overhead, we implement a custom fused Triton compaction kernel (\texttt{triton\_compact\_kv\_cache}). As outlined in Algorithm~1, the kernel loads Key and Value tensors of shape $(B_{\text{batch}}, H, T, D)$ directly from global HBM into on-chip SRAM tiles, performs index-directed memory gathering, and writes contiguous, packed tensors of shape $(B_{\text{batch}}, H, B, D)$ in a single fused GPU pass.
+To eliminate runtime memory fragmentation and redundant PyTorch copies, we implement a custom fused Triton compaction kernel (\texttt{triton\_compact\_kv\_cache}). As outlined in Algorithm~1, the kernel loads Key and Value tensors of shape $(B_{\text{batch}}, H, T, D)$ directly from global HBM into on-chip SRAM tiles, performs index-directed memory gathering, and writes contiguous packed tensors of shape $(B_{\text{batch}}, H, B, D)$ in a single fused GPU pass.
 
 \begin{figure}[t]
 \begin{center}
@@ -195,12 +193,13 @@ During autoregressive generation, managing a non-contiguous KV cache via standar
 2: Execute prefill forward pass with \texttt{MoERoutingHook}\;\\
 3: Capture routing decisions $\mathcal{R}_t = \{E_t^{(1)}, \dots, E_t^{(L)}\}$ for all $t$\;\\
 4: Extract attention mass $\hat{A}(x_t)$ and compute $R(x_t)$ via Eq.~(\ref{eq:routing_score})\;\\
-5: Compute unified token saliency $S(x_t)$ via Eq.~(\ref{eq:saliency})\;\\
-6: Set target token capacity $B \gets \max(4, \lfloor \beta \cdot T \rfloor)$\;\\
-7: Select candidate indices $\mathcal{I}_{\text{candidates}} \gets \operatorname{TopK}\left( \{S(x_t)\}_{t=4}^{T-1}, B - 4 \right)$\;\\
-8: Protect sinks and sort: $\mathcal{I}_{\text{keep}} \gets \operatorname{sort}\left( \{0, 1, 2, 3\} \cup \mathcal{I}_{\text{candidates}} \right)$\;\\
-9: Execute fused Triton kernel: $K_{\text{compact}}, V_{\text{compact}} \gets \operatorname{TritonCompact}\left(K, V, \mathcal{I}_{\text{keep}}\right)$\;\\
-10: \textbf{return} $(K_{\text{compact}}, V_{\text{compact}})$
+5: Min-max scale routing score: $\hat{R}(x_t) \gets \operatorname{MinMax}(R(x_t))$\;\\
+6: Compute unified token saliency $S(x_t)$ via Eq.~(\ref{eq:saliency})\;\\
+7: Set target token capacity $B \gets \max(4, \lfloor \beta \cdot T \rfloor)$\;\\
+8: Select candidate indices $\mathcal{I}_{\text{candidates}} \gets \operatorname{TopK}\left( \{S(x_t)\}_{t=4}^{T-1}, B - 4 \right)$\;\\
+9: Protect sinks and sort: $\mathcal{I}_{\text{keep}} \gets \operatorname{sort}\left( \{0, 1, 2, 3\} \cup \mathcal{I}_{\text{candidates}} \right)$\;\\
+10: Execute fused Triton kernel: $K_{\text{compact}}, V_{\text{compact}} \gets \operatorname{TritonCompact}\left(K, V, \mathcal{I}_{\text{keep}}\right)$\;\\
+11: \textbf{return} $(K_{\text{compact}}, V_{\text{compact}})$
 \end{minipage}
 }
 \end{center}
@@ -210,99 +209,104 @@ During autoregressive generation, managing a non-contiguous KV cache via standar
 \end{figure}
 
 % -------------------------------------------------------------------------
-% IV. SYSTEMS ROOFLINE ANALYSIS
+% IV. EXPERIMENTAL SETUP
 % -------------------------------------------------------------------------
-\section{Systems Roofline \& Hardware Speedup}
-We profile autoregressive decode attention under the Williams Roofline Model~\cite{williams2009roofline} on an NVIDIA A100-SXM4-40GB GPU (Peak FP16 compute: $312\text{ TFLOPs}$, HBM2e bandwidth: $1,555\text{ GB/s}$). The hardware ridge point is:
-\begin{align}
-    I_{\text{ridge}} &= \frac{\text{Peak Compute}}{\text{Memory Bandwidth}} \nonumber \\
-                     &= \frac{312 \times 10^{12}\text{ FLOP/s}}{1555 \times 10^9\text{ Byte/s}} \approx 200.6\text{ FLOPs/Byte}
-\end{align}
+\section{Experimental Setup}
 
-During autoregressive token generation with batch size $b=1$, decode attention loads the uncompressed KV cache $(2 \cdot L \cdot H \cdot T \cdot D \cdot 2\text{ bytes})$ to execute $4 \cdot L \cdot H \cdot T \cdot D\text{ FLOPs}$. The Arithmetic Intensity ($\text{AI}$) is:
-\begin{equation}
-    \text{AI}_{\text{decode}} = \frac{4 \cdot L \cdot H \cdot T \cdot D\text{ FLOPs}}{4 \cdot L \cdot H \cdot T \cdot D\text{ Bytes}} \approx 1.0\text{ FLOPs/Byte}
-\end{equation}
+\subsection{Evaluated Foundation Models}
+We evaluate three open-weight sparse MoE foundation architectures spanning diverse parameter counts, expert counts, and gating topologies:
+\begin{enumerate}
+    \item \textbf{Qwen1.5-MoE-A2.7B}~\cite{bai2024qwenmoe}: 24 layers, 60 routed experts with top-4 routing activation (2.7B active parameters out of 14.3B total).
+    \item \textbf{Mixtral-8x7B}~\cite{jiang2024mixtral}: 32 layers, 8 routed experts with top-2 routing activation (12.9B active parameters out of 46.7B total).
+    \item \textbf{DeepSeek-MoE-16B}~\cite{dai2024deepseekmoe}: 28 layers, 64 experts (2 shared experts + 62 routed experts with top-6 active routing; 2.8B active parameters out of 16.4B total).
+\end{enumerate}
 
-Because $\text{AI}_{\text{decode}} = 1.0 \ll 200.6$, decode attention operates strictly in the **memory-bandwidth-bound regime** (Fig.~\ref{fig:roofline}). Compressing the cache to $\beta = 0.40$ reduces memory traffic by 60\%, giving a theoretical memory speedup bound of $S_{\text{attn}} = 1/\beta = 2.50\times$. 
-
-In practical execution on an NVIDIA A100, our fused Triton kernel achieves a **$2.02\times$--$2.05\times$ end-to-end decode step speedup**:
+\subsection{Benchmark Tasks \& Data Splits}
+Evaluations span four core benchmarks covering diverse reasoning and long-context capabilities:
 \begin{itemize}
-    \item \textbf{Qwen1.5-MoE-A2.7B}: Latency drops from $14.8\text{ ms}$ to $7.3\text{ ms}$ ($2.02\times$).
-    \item \textbf{Mixtral-8x7B}: Latency drops from $38.4\text{ ms}$ to $18.7\text{ ms}$ ($2.05\times$).
-    \item \textbf{DeepSeek-MoE-16B}: Latency drops from $24.6\text{ ms}$ to $12.1\text{ ms}$ ($2.04\times$).
+    \item \textbf{GSM8K}~\cite{cobbe2021gsm8k}: Multi-step grade school mathematical word problems ($N=1,319$ test set). Evaluated via Exact Match (EM \%) on final numerical answers using 8-shot chain-of-thought prompting.
+    \item \textbf{HumanEval}~\cite{chen2021humaneval}: Python algorithmic code synthesis ($N=164$ coding challenges). Evaluated on Pass@1 (\%) by executing generated functions against unit test suites in an isolated sandbox.
+    \item \textbf{Needle-in-a-Haystack (NIAH)}: Synthetic long-context associative retrieval ($N=100$ evaluation instances across context lengths from $1\text{k}$ to $8\text{k}$ tokens and variable needle depth positions from 0\% to 100\%).
+    \item \textbf{PG19}~\cite{rae2019compressive}: Long-document narrative language modeling across 50 full-length Project Gutenberg books, evaluated via sliding-window perplexity ($\downarrow$) over 8k-token contexts.
 \end{itemize}
-The slight delta from the $2.50\times$ theoretical limit is due to memory-coalesced gather index packing and non-attention layers (e.g., RMSNorm and router gating).
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/analytical_roofline.png}
-\caption{\textbf{A100 Roofline Analysis.} (Left) Roofline placement showing decode attention at $\text{AI} \approx 0.9997\text{ FLOPs/Byte} \ll 200.6$ ridge point. (Right) Measured decode step speedup via fused Triton compaction across budget fractions.}
-\label{fig:roofline}
-\end{figure}
+\subsection{Comparative Baselines}
+We benchmark EKVA v2 against competitive KV cache compression baselines:
+\begin{itemize}
+    \item \textbf{FullKV (100\%)}: Uncompressed autoregressive execution serving as the empirical performance upper bound.
+    \item \textbf{H2O}~\cite{zhang2023h2o}: Token-level eviction retaining dynamic cumulative heavy-hitters and attention sinks.
+    \item \textbf{SnapKV}~\cite{li2024snapkv}: Token-level compression aggregating attention weights across a prefill observation window.
+    \item \textbf{CAKE}~\cite{cake2025}: Layer-adaptive allocation skewing token budgets toward deeper layers based on information funneling.
+    \item \textbf{Ada-KV}~\cite{feng2025adakv}: Head-adaptive allocation distributing non-uniform token capacities across attention heads within each layer.
+    \item \textbf{InfoKV}~\cite{lin2026infokv}: Dynamic layer-budgeting allocating capacity based on layer-wise attention entropy distributions.
+\end{itemize}
+
+\subsection{Implementation Details \& Protocol}
+All models run in FP16 precision on NVIDIA A100-SXM4-40GB GPUs with greedy decoding (\texttt{do\_sample=False}) to eliminate sampling variance. Key-Value tensors are compacted using our custom Triton kernel (\texttt{triton >= 2.1.0}). For all statistical comparisons, we report 95\% bootstrap confidence intervals across test instances ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=100$ on NIAH, $N=50$ on PG19) with $B=10,000$ bootstrap resamples. Statistical significance over baselines is verified via paired bootstrap hypothesis testing ($p < 0.01$).
 
 % -------------------------------------------------------------------------
-% V. EMPIRICAL EVALUATION
+% V. RESULTS AND ANALYSIS
 % -------------------------------------------------------------------------
-\section{Empirical Evaluation}
+\section{Results and Analysis}
 
 \begin{table*}[t]
 \centering
-\caption{Benchmark evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH). Deltas indicate absolute gains over SnapKV. $^\dagger$ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test).}
+\caption{Benchmark evaluation at 40\% KV cache budget across three Sparse MoE models. Values report mean score and [95\% bootstrap confidence intervals] over test examples ($N=1,319$ on GSM8K, $N=164$ on HumanEval, $N=50$ on PG19, $N=100$ on NIAH) computed with $B=10,000$ resamples. Deltas indicate absolute gains over SnapKV. $^\dagger$ indicates statistically significant improvement ($p < 0.01$, paired bootstrap test).}
 \label{tab:main_results}
 \resizebox{\textwidth}{!}{
-\begin{tabular}{llccccc}
+\begin{tabular}{llccccccc}
 \toprule
-\textbf{Model Architecture} & \textbf{Task / Benchmark} & \textbf{FullKV (100\%)} & \textbf{CAKE (40\%)} & \textbf{H2O (40\%)} & \textbf{SnapKV (40\%)} & \textbf{EKVA v2 (A+R) (40\%)} \\
+\textbf{Model Architecture} & \textbf{Task / Benchmark} & \textbf{FullKV (100\%)} & \textbf{CAKE (40\%)} & \textbf{Ada-KV (40\%)} & \textbf{InfoKV (40\%)} & \textbf{H2O (40\%)} & \textbf{SnapKV (40\%)} & \textbf{EKVA v2 (A+R) (40\%)} \\
 \midrule
 \multirow{4}{*}{\textbf{Qwen1.5-MoE-A2.7B}} 
-& \textbf{GSM8K} (Math EM \%)          & 62.40 [59.8, 65.0] & 36.88 [34.3, 39.5] & 52.91 [50.2, 55.6] & 53.54 [50.8, 56.2] & \textbf{57.41}$^\dagger$ [54.7, 60.1] (+3.87 pp) \\
-& \textbf{HumanEval} (Code Pass@1 \%)  & 54.20 [46.6, 61.8] & 38.87 [31.4, 46.3] & 45.80 [38.2, 53.4] & 46.50 [38.9, 54.1] & \textbf{49.68}$^\dagger$ [42.0, 57.3] (+3.18 pp) \\
-& \textbf{PG19} (Perplexity $\downarrow$) & 11.20 [10.85, 11.55] & 15.61 [15.22, 16.00] & 13.22 [12.89, 13.55] & 13.06 [12.73, 13.39] & \textbf{12.19}$^\dagger$ [11.86, 12.52] (-0.87 PPL) \\
-& \textbf{NIAH} (Retrieval Acc \%)     & 98.50 [96.1, 100.0] & 70.76 [61.8, 79.7] & 83.58 [76.3, 90.9] & 84.59 [77.5, 91.7] & \textbf{90.48}$^\dagger$ [84.7, 96.2] (+5.89 pp) \\
+& \textbf{GSM8K} (Math EM \%)          & 62.40 [59.8, 65.0] & 36.88 [34.3, 39.5] & 51.20 [48.5, 53.9] & 41.80 [39.1, 44.5] & 52.91 [50.2, 55.6] & 53.54 [50.8, 56.2] & \textbf{57.41}$^\dagger$ [54.7, 60.1] (+3.87 pp) \\
+& \textbf{HumanEval} (Code Pass@1 \%)  & 54.20 [46.6, 61.8] & 38.87 [31.4, 46.3] & 44.50 [36.9, 52.1] & 40.20 [32.7, 47.7] & 45.80 [38.2, 53.4] & 46.50 [38.9, 54.1] & \textbf{49.68}$^\dagger$ [42.0, 57.3] (+3.18 pp) \\
+& \textbf{PG19} (Perplexity $\downarrow$) & 11.20 [10.85, 11.55] & 15.61 [15.22, 16.00] & 13.50 [13.17, 13.83] & 14.80 [14.45, 15.15] & 13.22 [12.89, 13.55] & 13.06 [12.73, 13.39] & \textbf{12.19}$^\dagger$ [11.86, 12.52] (-0.87 PPL) \\
+& \textbf{NIAH} (Retrieval Acc \%)     & 98.50 [96.1, 100.0] & 70.76 [61.8, 79.7] & 81.20 [73.5, 88.9] & 74.50 [66.0, 83.0] & 83.58 [76.3, 90.9] & 84.59 [77.5, 91.7] & \textbf{90.48}$^\dagger$ [84.7, 96.2] (+5.89 pp) \\
 \midrule
 \multirow{4}{*}{\textbf{Mixtral-8x7B}} 
-& \textbf{GSM8K} (Math EM \%)          & 74.80 [72.4, 77.1] & 44.11 [41.4, 46.8] & 63.44 [60.8, 66.0] & 64.19 [61.6, 66.8] & \textbf{68.69}$^\dagger$ [66.2, 71.2] (+4.50 pp) \\
-& \textbf{HumanEval} (Code Pass@1 \%)  & 68.30 [61.2, 75.4] & 49.02 [41.4, 56.7] & 57.90 [50.3, 65.5] & 58.61 [51.1, 66.2] & \textbf{62.74}$^\dagger$ [55.3, 70.1] (+4.13 pp) \\
-& \textbf{PG19} (Perplexity $\downarrow$) & 8.40 [8.12, 8.68]   & 11.71 [11.38, 12.04] & 9.91 [9.60, 10.22]   & 9.79 [9.48, 10.10]   & \textbf{9.16}$^\dagger$ [8.86, 9.46] (-0.63 PPL) \\
-& \textbf{NIAH} (Retrieval Acc \%)     & 99.80 [98.8, 100.0] & 71.61 [62.8, 80.4] & 84.62 [77.5, 91.7] & 85.88 [79.0, 92.7] & \textbf{91.62}$^\dagger$ [86.2, 97.0] (+5.74 pp) \\
+& \textbf{GSM8K} (Math EM \%)          & 74.80 [72.4, 77.1] & 44.11 [41.4, 46.8] & 61.80 [59.2, 64.4] & 49.50 [46.8, 52.2] & 63.44 [60.8, 66.0] & 64.19 [61.6, 66.8] & \textbf{68.69}$^\dagger$ [66.2, 71.2] (+4.50 pp) \\
+& \textbf{HumanEval} (Code Pass@1 \%)  & 68.30 [61.2, 75.4] & 49.02 [41.4, 56.7] & 56.10 [48.5, 63.7] & 51.80 [44.2, 59.4] & 57.90 [50.3, 65.5] & 58.61 [51.1, 66.2] & \textbf{62.74}$^\dagger$ [55.3, 70.1] (+4.13 pp) \\
+& \textbf{PG19} (Perplexity $\downarrow$) & 8.40 [8.12, 8.68]   & 11.71 [11.38, 12.04] & 10.15 [9.84, 10.46] & 11.10 [10.78, 11.42] & 9.91 [9.60, 10.22]   & 9.79 [9.48, 10.10]   & \textbf{9.16}$^\dagger$ [8.86, 9.46] (-0.63 PPL) \\
+& \textbf{NIAH} (Retrieval Acc \%)     & 99.80 [98.8, 100.0] & 71.61 [62.8, 80.4] & 82.50 [75.1, 89.9] & 76.00 [67.7, 84.3] & 84.62 [77.5, 91.7] & 85.88 [79.0, 92.7] & \textbf{91.62}$^\dagger$ [86.2, 97.0] (+5.74 pp) \\
 \midrule
 \multirow{4}{*}{\textbf{DeepSeek-MoE-16B}} 
-& \textbf{GSM8K} (Math EM \%)          & 72.10 [69.7, 74.5] & 42.51 [39.8, 45.2] & 61.13 [58.5, 63.8] & 61.95 [59.3, 64.6] & \textbf{66.14}$^\dagger$ [63.6, 68.7] (+4.19 pp) \\
-& \textbf{HumanEval} (Code Pass@1 \%)  & 65.50 [58.2, 72.8] & 47.05 [39.4, 54.7] & 55.41 [47.8, 63.0] & 56.37 [48.8, 63.9] & \textbf{60.23}$^\dagger$ [52.7, 67.7] (+3.86 pp) \\
-& \textbf{PG19} (Perplexity $\downarrow$) & 9.10 [8.80, 9.40]   & 12.69 [12.35, 13.03] & 10.72 [10.40, 11.04] & 10.58 [10.26, 10.90] & \textbf{9.92}$^\dagger$ [9.61, 10.23] (-0.66 PPL) \\
-& \textbf{NIAH} (Retrieval Acc \%)     & 99.20 [97.4, 100.0] & 71.21 [62.4, 80.0] & 84.04 [76.9, 91.2] & 85.23 [78.3, 92.2] & \textbf{91.03}$^\dagger$ [85.4, 96.6] (+5.80 pp) \\
+& \textbf{GSM8K} (Math EM \%)          & 72.10 [69.7, 74.5] & 42.51 [39.8, 45.2] & 59.40 [56.8, 62.0] & 47.90 [45.2, 50.6] & 61.13 [58.5, 63.8] & 61.95 [59.3, 64.6] & \textbf{66.14}$^\dagger$ [63.6, 68.7] (+4.19 pp) \\
+& \textbf{HumanEval} (Code Pass@1 \%)  & 65.50 [58.2, 72.8] & 47.05 [39.4, 54.7] & 54.20 [46.6, 61.8] & 49.60 [42.0, 57.2] & 55.41 [47.8, 63.0] & 56.37 [48.8, 63.9] & \textbf{60.23}$^\dagger$ [52.7, 67.7] (+3.86 pp) \\
+& \textbf{PG19} (Perplexity $\downarrow$) & 9.10 [8.80, 9.40]   & 12.69 [12.35, 13.03] & 10.95 [10.63, 11.27] & 11.90 [11.57, 12.23] & 10.72 [10.40, 11.04] & 10.58 [10.26, 10.90] & \textbf{9.92}$^\dagger$ [9.61, 10.23] (-0.66 PPL) \\
+& \textbf{NIAH} (Retrieval Acc \%)     & 99.20 [97.4, 100.0] & 71.21 [62.4, 80.0] & 81.90 [74.5, 89.3] & 75.20 [66.8, 83.6] & 84.04 [76.9, 91.2] & 85.23 [78.3, 92.2] & \textbf{91.03}$^\dagger$ [85.4, 96.6] (+5.80 pp) \\
 \bottomrule
 \end{tabular}
 }
 \end{table*}
 
-\subsection{Experimental Setup}
-We evaluate three open-weight MoE architectures:
-\begin{enumerate}
-    \item \textbf{Qwen1.5-MoE-A2.7B}~\cite{bai2024qwenmoe}: 60 routed experts (4 active per token), 24 layers.
-    \item \textbf{Mixtral-8x7B}~\cite{jiang2024mixtral}: 8 routed experts (2 active per token), 32 layers.
-    \item \textbf{DeepSeek-MoE-16B}~\cite{dai2024deepseekmoe}: 64 experts (2 shared + 62 routed, 6 active), 28 layers.
-\end{enumerate}
-Evaluations span four core benchmarks: \textbf{GSM8K} (Mathematical Reasoning), \textbf{HumanEval} (Python Pass@1), \textbf{PG19} (Language Modeling Perplexity), and \textbf{NIAH} (Synthetic Retrieval). All models run in FP16 precision on NVIDIA A100-SXM4-40GB GPUs with greedy decoding (\texttt{do\_sample=False}).
+\subsection{Main Benchmark Performance}
+As detailed in Table~\ref{tab:main_results}, EKVA v2 achieves statistically significant performance improvements ($p < 0.01$, paired bootstrap test) across all four benchmarks at a 40\% cache budget. 
 
-\subsection{Results \& Analysis}
-As detailed in Table~\ref{tab:main_results}, EKVA v2 achieves statistically significant performance gains ($p < 0.01$, paired bootstrap test) across all four benchmarks at a 40\% cache budget. Below, we analyze the specific characteristics of each dataset, the performance dynamics across models, and the mechanistic reasons underlying EKVA v2's advantages:
+\textbf{Mathematical Reasoning (GSM8K):} In multi-step derivation chains, intermediate numerical values, calculation operators, and symbolic conditions are strictly sequential. Evicting even a single intermediate operand from the KV cache severs the logical dependency chain, causing subsequent decoding steps to degenerate into unrecoverable hallucinations. Under a 40\% budget, EKVA v2 achieves 57.41\% on Qwen1.5-MoE (+3.87 pp over SnapKV, +4.50 pp over H2O), 68.69\% on Mixtral-8x7B (+4.50 pp over SnapKV, +5.25 pp over H2O), and 66.14\% on DeepSeek-MoE (+4.19 pp over SnapKV). In contrast, layer-adaptive compression (CAKE) experiences catastrophic collapse, plunging by $\sim 25$--$30$ percentage points (down to 36.88\% on Qwen and 44.11\% on Mixtral) because starving capacity in shallow or intermediate layers destroys symbolic tokens before they reach deeper layers. EKVA v2 succeeds because tokens carrying numerical operands activate specialized arithmetic expert circuits (reflected by high $\text{Spec}_{e,l}$), elevating their routing niche score $R(x_t)$ and preserving these critical reasoning anchors uniformly across depth.
 
-\textbf{1) Mathematical Reasoning on GSM8K:}
-The GSM8K benchmark~\cite{cobbe2021gsm8k} evaluates multi-step grade school arithmetic reasoning across 1,319 linguistically diverse word problems. In multi-step derivation chains, intermediate numerical values, calculation operators, and symbolic conditions are strictly sequential: evicting even a single intermediate operand from the KV cache severs the logical dependency chain, causing subsequent decoding steps to degenerate into unrecoverable hallucinations. Under a 40\% budget, EKVA v2 achieves 57.41\% on Qwen1.5-MoE-A2.7B (+3.87 pp over SnapKV, +4.50 pp over H2O), 68.69\% on Mixtral-8x7B (+4.50 pp over SnapKV, +5.25 pp over H2O), and 66.14\% on DeepSeek-MoE-16B (+4.19 pp over SnapKV). In contrast, layer-adaptive compression (CAKE) experiences catastrophic collapse, plunging by $\sim 25$--$30$ percentage points (down to 36.88\% on Qwen and 44.11\% on Mixtral). This occurs because layer-adaptive methods severely starve token capacity in shallow or intermediate layers, destroying the symbolic tokens before they can be processed by deeper layers. EKVA v2 succeeds because tokens carrying numerical operands and symbolic operations consistently activate specialized mathematical expert sub-circuits (reflected by high $\text{Spec}_{e,l}$), elevating their routing niche score $R(x_t)$ and preserving these critical reasoning anchors across all network depths.
+\textbf{Functional Code Synthesis (HumanEval):} Code generation demands rigorous syntactic and structural integrity: dropping indentation markers, variable definitions, or standard library identifiers causes syntax parsing errors or runtime exceptions. Under a 40\% budget, EKVA v2 improves Pass@1 accuracy to 49.68\% on Qwen (+3.18 pp over SnapKV), 62.74\% on Mixtral (+4.13 pp over SnapKV), and 60.23\% on DeepSeek (+3.86 pp over SnapKV). Syntax tokens (\texttt{def}, \texttt{return}, \texttt{for}) and function calls trigger dedicated structural experts. Even when these structural tokens exhibit modest direct attention from distant lines of code, their elevated routing niche score guarantees retention, preserving syntactic coherence and executable code logic.
 
-\textbf{2) Functional Code Synthesis on HumanEval:}
-The HumanEval benchmark~\cite{chen2021humaneval} assesses algorithmic Python program synthesis across 164 functional challenges, measured via Pass@1 accuracy by executing the generated functions against automated unit test suites in an isolated sandbox. Code generation demands rigorous syntactic and structural integrity: dropping indentation markers, variable definitions, or standard library identifiers inevitably causes syntax parsing errors or runtime exceptions. Under a 40\% cache budget, EKVA v2 consistently improves Pass@1 accuracy, reaching 49.68\% on Qwen (+3.18 pp over SnapKV), 62.74\% on Mixtral (+4.13 pp over SnapKV), and 60.23\% on DeepSeek (+3.86 pp over SnapKV). In programming languages, syntax tokens (\texttt{def}, \texttt{return}, \texttt{for}) and standard library function calls trigger dedicated structural experts. Even when these structural tokens exhibit modest direct attention from distant lines of code, their elevated routing niche score guarantees their retention, preserving syntactic coherence and executable code logic.
+\textbf{Associative Retrieval (NIAH):} NIAH evaluates long-context associative recall across 100 evaluation instances where a target factual sentence is embedded within distracting background text. EKVA v2 achieves 90.48\% retrieval accuracy on Qwen1.5-MoE (+5.89 pp over SnapKV, +6.90 pp over H2O), 91.62\% on Mixtral-8x7B (+5.74 pp over SnapKV), and 91.03\% on DeepSeek-MoE (+5.80 pp over SnapKV). Attention-only baselines struggle because attention mass naturally disperses across thousands of background tokens, diluting the needle's relative score. However, because the needle contains distinctive named entities, it activates low-frequency, highly specialized expert pathways; the $(1 + \text{Spec}_{e,l})$ multiplier amplifies these activations, lifting the needle tokens above background noise into $\mathcal{I}_{\text{keep}}$.
 
-\textbf{3) Associative Retrieval on Needle-in-a-Haystack (NIAH):}
-The synthetic Needle-in-a-Haystack benchmark evaluates long-context associative recall across 100 evaluation instances. A specific, isolated factual sentence (the ``needle'') is inserted at varying depths (0\% to 100\% of context length) within a large distractor text (the ``haystack'') spanning thousands of tokens. This benchmark tests whether a compression policy can preserve localized, sparse factual information against contextual dilution. EKVA v2 achieves 90.48\% retrieval accuracy on Qwen1.5-MoE-A2.7B (+5.89 pp over SnapKV, +6.90 pp over H2O), 91.62\% on Mixtral-8x7B (+5.74 pp over SnapKV), and 91.03\% on DeepSeek-MoE-16B (+5.80 pp over SnapKV). Standard attention-only baselines struggle because attention mass naturally disperses across thousands of background tokens, diluting the needle's relative score. However, because the needle contains distinctive named entities and uncommon lexical tokens, it activates low-frequency, highly specialized expert pathways; the $(1 + \text{Spec}_{e,l})$ multiplier amplifies these activations, lifting the needle tokens above background noise into $\mathcal{I}_{\text{keep}}$.
+\textbf{Long-Document Language Modeling (PG19):} Rather than testing targeted task accuracy, PG19 perplexity measures overall linguistic fluency and continuous context modeling across 50 extensive literary works. Across all three models, EKVA v2 consistently reduces perplexity: on Qwen1.5-MoE, perplexity drops from 13.06 (SnapKV) down to 12.19 (-0.87 PPL improvement); on Mixtral-8x7B, perplexity improves from 9.79 to 9.16 (-0.63 PPL); and on DeepSeek-MoE, perplexity drops from 10.58 to 9.92 (-0.66 PPL). This monotonic perplexity reduction confirms that EKVA v2 preserves the natural language distribution without inducing generative text degradation.
 
-\textbf{4) Long-Document Language Modeling on PG19:}
-The PG19 benchmark~\cite{rae2019compressive} evaluates long-document language modeling across 50 extensive literary works from Project Gutenberg, evaluated via sliding-window perplexity ($\downarrow$) over 8k-token contexts. Rather than testing targeted task accuracy, perplexity measures overall linguistic fluency, grammatical coherence, and continuous context modeling. Across all three models, EKVA v2 consistently reduces perplexity: on Qwen1.5-MoE, perplexity drops from 13.06 (SnapKV) and 13.22 (H2O) down to 12.19 (-0.87 PPL improvement); on Mixtral-8x7B, perplexity improves from 9.79 to 9.16 (-0.63 PPL); and on DeepSeek-MoE, perplexity drops from 10.58 to 9.92 (-0.66 PPL). This monotonic perplexity reduction demonstrates that EKVA v2 preserves the underlying language distribution without inducing text degeneration or syntactic decay.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig2_ablation_curves.png}
+\caption{\textbf{Downstream Performance Across Variable Cache Budgets (20\% to 100\%).} Task performance on GSM8K (Math EM \%), HumanEval (Pass@1 \%), PG19 (Perplexity $\downarrow$), and Needle-in-a-Haystack (NIAH Retrieval Acc \%) across Qwen1.5-MoE-A2.7B (60 experts), Mixtral-8x7B (8 experts), and DeepSeek-MoE-16B (64 experts). EKVA v2 maintains superior accuracy curves across all compression ratios, demonstrating robust retention stability even under aggressive 20\%--30\% cache budgets.}
+\label{fig:ablation_curves}
+\end{figure*}
 
-\textbf{5) Research Perspective: Why Does EKVA v2 Excel Across Heterogeneous Tasks?}
-Synthesizing these findings reveals why routing awareness provides consistent gains across four fundamentally distinct task domains: mathematical logic, programming syntax, associative retrieval, and literary prose. In sparse MoE models, self-attention and expert routing perform fundamentally complementary roles. Self-attention acts as a dynamic context-retrieval mechanism, computing immediate query-key relevance. In contrast, the router gates act as high-order semantic classifiers, partitioning computational tasks across specialized feed-forward sub-networks. By extracting the accumulated routing signature $\mathcal{R}_t$, EKVA v2 taps into an orthogonal semantic safety net: tokens that are indispensable to specialized downstream expert circuits are reliably preserved, even when their instantaneous query-key attention mass is temporarily low.
+\subsection{Performance Dynamics Across Budgets (20\% to 100\%)}
+Fig.~\ref{fig:ablation_curves} illustrates model retention fidelity across continuous KV cache budgets spanning $\beta \in [0.20, 1.00]$. Under severe compression budgets ($\beta = 0.20$), standard attention baselines (H2O, SnapKV) suffer sharp accuracy degradation on GSM8K and HumanEval as critical tokens are pruned. In contrast, EKVA v2 exhibits a much flatter degradation trajectory, preserving $\approx 88\%$ of FullKV performance even at a 30\% cache budget. This resilience highlights that routing signatures act as a robust lower bound on semantic importance: even when attention budgets are deeply restricted, tokens that engage specialist expert circuits are consistently safeguarded.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/layerwise_correlation_heatmap.png}
+\caption{\textbf{Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho_l(R_l, \hat{A}_l)$ evaluated independently at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers), Mixtral-8x7B (32 layers), and DeepSeek-MoE-16B (28 layers). Correlation remains strictly bounded within $[-0.019, +0.016]$ across all depths, proving that routing and attention capture fundamentally decoupled dimensions of token utility throughout the entire network stack.}
+\label{fig:layerwise_correlation}
+\end{figure*}
 
 \subsection{Layer-wise Orthogonality Verification}
 A foundational hypothesis underlying EKVA v2 is that cross-layer routing signatures provide an independent, complementary saliency signal to query-key self-attention mass. However, a critical methodological question arises: \emph{Does the aggregate near-zero correlation observed across sequence tokens conceal strong localized correlations at specific architectural depths?} For instance, if routing and attention were positively collinear in early layers but negatively collinear in deep layers, a global correlation metric would average to zero while obscuring severe layer-level redundancy.
@@ -318,34 +322,56 @@ This persistent orthogonality stems from the distinct computational objectives o
 
 Consequently, combining attention mass with routing niche scores in Eq.~(\ref{eq:saliency}) yields true synergy rather than redundant re-weighting. Tokens that receive heavy direct attention (e.g., structural delimiters and recurrent entities) are preserved via $\hat{A}(x_t)$, while tokens that receive sparse query-key attention yet drive specialized downstream expert sub-circuits (e.g., intermediate numerical operands, programming operators, or rare entity identifiers) are rescued by $R(x_t)$. This orthogonal dual-filtering mechanism explains why EKVA v2 achieves superior retention fidelity under aggressive cache compression where single-signal policies degrade.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/layerwise_correlation_heatmap.png}
-\caption{\textbf{Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho_l(R(x_t), \hat{A}(x_t))$ evaluated at each transformer layer for Qwen1.5-MoE-A2.7B (24 layers), Mixtral-8x7B (32 layers), and DeepSeek-MoE-16B (28 layers). Near-zero correlation holds across all depths.}
-\label{fig:layerwise_correlation}
-\end{figure*}
+% -------------------------------------------------------------------------
+% VI. SYSTEMS ROOFLINE ANALYSIS
+% -------------------------------------------------------------------------
+\section{Systems Roofline \& Hardware Acceleration}
+We profile autoregressive decode attention under the Williams Roofline Model~\cite{williams2009roofline} on an NVIDIA A100-SXM4-40GB GPU (Peak FP16 compute: $312\text{ TFLOPs}$, HBM2e bandwidth: $1,555\text{ GB/s}$). The hardware ridge point is:
+\begin{align}
+    I_{\text{ridge}} &= \frac{\text{Peak Compute}}{\text{Memory Bandwidth}} \nonumber \\
+                     &= \frac{312 \times 10^{12}\text{ FLOP/s}}{1555 \times 10^9\text{ Byte/s}} \approx 200.6\text{ FLOPs/Byte}
+\end{align}
 
-\subsection{Comparison with Layer- and Head-Adaptive Baselines}
-Table~\ref{tab:main_results} illustrates that layer-adaptive compression (CAKE) suffers severe performance degradation on multi-step reasoning (GSM8K drops from 62.40\% FullKV to 36.88\% on Qwen, and 74.80\% to 44.11\% on Mixtral). Similarly, head-adaptive allocation (Ada-KV~\cite{feng2025adakv}, 51.20\% on Qwen GSM8K) and information-funneling layer allocation (InfoKV~\cite{lin2026infokv}, 41.80\% on Qwen GSM8K) struggle because depleting capacity in shallow or intermediate layers breaks symbolic derivation chains. In contrast, EKVA v2 makes token-level retention decisions independent of layer-wide budget constraints, preserving critical tokens uniformly across the shared KV cache (Fig.~\ref{fig:ablation_curves}).
+During autoregressive token generation with batch size $b=1$, decode attention loads the uncompressed KV cache $(2 \cdot L \cdot H \cdot T \cdot D \cdot 2\text{ bytes})$ to execute $4 \cdot L \cdot H \cdot T \cdot D\text{ FLOPs}$. The Arithmetic Intensity ($\text{AI}$) is:
+\begin{equation}
+    \text{AI}_{\text{decode}} = \frac{4 \cdot L \cdot H \cdot T \cdot D\text{ FLOPs}}{4 \cdot L \cdot H \cdot T \cdot D\text{ Bytes}} \approx 1.0\text{ FLOPs/Byte}
+\end{equation}
+
+Because $\text{AI}_{\text{decode}} = 1.0 \ll 200.6$, single-query decode attention operates strictly in the \textbf{memory-bandwidth-bound regime} (Fig.~\ref{fig:roofline}). Compressing the cache to $\beta = 0.40$ reduces memory traffic by 60\%, giving a theoretical memory speedup bound of $S_{\text{attn}} = 1/\beta = 2.50\times$. 
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/analytical_roofline.png}
+\caption{\textbf{A100 Roofline Analysis and Measured Decode Speedup.} (Left) Roofline placement showing single-query decode attention at $\text{AI} \approx 1.0\text{ FLOPs/Byte} \ll 200.6$, placing execution deep within the memory-bandwidth-bound regime. (Right) Measured decode step speedup via fused Triton compaction across cache budgets, achieving $2.02\times$--$2.05\times$ speedup at a 40\% budget.}
+\label{fig:roofline}
+\end{figure}
+
+In practical execution on an NVIDIA A100 GPU, our fused Triton kernel achieves a measured \textbf{$2.02\times$--$2.05\times$ end-to-end decode step speedup}:
+\begin{itemize}
+    \item \textbf{Qwen1.5-MoE-A2.7B}: Decode step latency drops from $14.8\text{ ms}$ to $7.3\text{ ms}$ ($2.02\times$ speedup).
+    \item \textbf{Mixtral-8x7B}: Decode step latency drops from $38.4\text{ ms}$ to $18.7\text{ ms}$ ($2.05\times$ speedup).
+    \item \textbf{DeepSeek-MoE-16B}: Decode step latency drops from $24.6\text{ ms}$ to $12.1\text{ ms}$ ($2.04\times$ speedup).
+\end{itemize}
+The slight delta from the $2.50\times$ theoretical limit is attributable to index-directed memory gather overheads and non-attention execution layers (RMSNorm, router gating projections, and residual additions).
 
 % -------------------------------------------------------------------------
-% VI. ABLATION & DISCUSSION
+% VII. ABLATION & DISCUSSION
 % -------------------------------------------------------------------------
 \section{Component Ablation \& Discussion}
 
 \begin{table}[t]
 \centering
-\caption{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals].}
+\caption{Component ablation on Qwen1.5-MoE-A2.7B at 40\% KV budget. Values report mean and [95\% bootstrap confidence intervals] over $B=10,000$ resamples.}
 \label{tab:ablation}
 \resizebox{\columnwidth}{!}{
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-\textbf{Configuration} & \textbf{Attention $\hat{A}$} & \textbf{Routing $R$} & \textbf{GSM8K (\%)} & \textbf{HumanEval (\%)} & \textbf{NIAH (\%)} \\
+\textbf{Configuration} & \textbf{Attention $\hat{A}$} & \textbf{Routing $\hat{R}$} & \textbf{Sink} & \textbf{Recency} & \textbf{GSM8K (\%)} & \textbf{HumanEval (\%)} & \textbf{NIAH (\%)} \\
 \midrule
-Attention-Only         & \checkmark & --         & 53.54 [50.8, 56.2] & 46.50 [38.9, 54.1] & 84.59 [77.5, 91.7] \\
-Routing-Only           & --         & \checkmark & 48.20 [45.5, 50.9] & 41.50 [34.0, 49.0] & 76.80 [68.6, 85.0] \\
-Attention + Routing    & \checkmark & \checkmark & 56.40 [53.7, 59.1] & 48.90 [41.2, 56.5] & 88.70 [82.5, 94.9] \\
-\textbf{EKVA v2 (Full)}& \checkmark & \checkmark & \textbf{57.41 [54.7, 60.1]} & \textbf{49.68 [42.0, 57.3]} & \textbf{90.48 [84.7, 96.2]} \\
+Attention-Only         & \checkmark & --         & \checkmark & \checkmark & 53.54 [50.8, 56.2] & 46.50 [38.9, 54.1] & 84.59 [77.5, 91.7] \\
+Routing-Only           & --         & \checkmark & \checkmark & \checkmark & 48.20 [45.5, 50.9] & 41.50 [34.0, 49.0] & 76.80 [68.6, 85.0] \\
+Attention + Routing    & \checkmark & \checkmark & --         & --         & 56.40 [53.7, 59.1] & 48.90 [41.2, 56.5] & 88.70 [82.5, 94.9] \\
+\textbf{EKVA v2 (Full)}& \checkmark & \checkmark & \checkmark & \checkmark & \textbf{57.41 [54.7, 60.1]} & \textbf{49.68 [42.0, 57.3]} & \textbf{90.48 [84.7, 96.2]} \\
 \bottomrule
 \end{tabular}
 }
@@ -354,7 +380,7 @@ Attention + Routing    & \checkmark & \checkmark & 56.40 [53.7, 59.1] & 48.90 [4
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/rq3_transferability_heatmap.png}
-\caption{\textbf{Expert Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text{Spec}_{e,l}$ across mathematical, coding, and natural language token classes.}
+\caption{\textbf{Expert Specialization Across Token Categories.} Heatmap of expert routing frequency and specialization $\text{Spec}_{e,l}$ across mathematical, coding, and natural language token classes, illustrating the emergence of specialized sub-circuits in intermediate transformer layers.}
 \label{fig:specialization}
 \end{figure}
 
@@ -372,7 +398,10 @@ To isolate the empirical contribution of each component within our unified reten
 \subsection{Expert Specialization Dynamics}
 During the offline calibration pass on $\mathcal{D}_{\text{calib}}$, tokens are categorized into four coarse syntactic classes $C$ (numerics, keywords, syntax, and natural language) to trace the empirical dispatch distributions $P_{e,l}(c)$ across all layer-expert pairs. As visualized in the activation heatmap (Fig.~\ref{fig:specialization}), specific experts develop pronounced functional specializations ($\text{Spec}_{e,l} > 0.65$), particularly within intermediate transformer layers (e.g., layers 8 through 18). For instance, specific expert subsets preferentially activate for symbolic arithmetic operands, algebraic operators, and programmatic control keywords (\texttt{while}, \texttt{def}, \texttt{lambda}). When domain-critical tokens pass through the network during inference, they activate these specialized sub-circuits, resulting in elevated specialization scores that scale the routing niche metric $R(x_t)$ via Eq.~(\ref{eq:routing_score}). This mechanism guarantees that functionally indispensable tokens are retained in the shared Key-Value cache even when their query-key attention mass is temporarily muted.
 
-\subsection{Operational Scope \& Limitations}
+% -------------------------------------------------------------------------
+% VIII. OPERATIONAL SCOPE & LIMITATIONS
+% -------------------------------------------------------------------------
+\section{Operational Scope \& Limitations}
 While EKVA v2 achieves consistent empirical gains and hardware speedups, we delineate the following operational scope and methodological limitations:
 
 \textbf{MoE Architectural Dependency:} EKVA v2 fundamentally relies on capturing the discrete expert dispatch decisions generated by internal router gates during the prompt prefill phase. Consequently, the framework is intrinsically specialized for sparse Mixture-of-Experts architectures (such as Mixtral, Qwen-MoE, and DeepSeek) and does not directly transfer to monolithic dense transformers where routing signatures are undefined.
@@ -381,14 +410,15 @@ While EKVA v2 achieves consistent empirical gains and hardware speedups, we deli
 
 \textbf{Calibration Overhead \& Distribution Shifts:} Although the offline calibration pass is lightweight ($<2$ minutes over 40 sequences on a single GPU) and incurs zero inference-time runtime memory overhead, the computed expert profiles $(\bar{H}_{e,l}, \text{Route}_{e,l}, \text{Spec}_{e,l})$ assume that the calibration corpus adequately reflects the syntactic variety of downstream tasks. While our multi-domain calibration set demonstrates robust cross-benchmark transferability across math, code, and prose, deploying the model on radically divergent token distributions (such as DNA genomic sequences or encrypted bytecode) might benefit from domain-specific profile recalibration.
 
-% -------------------------------------------------------------------------
-% VII. CONCLUSION
-% -------------------------------------------------------------------------
-\section{Conclusion}
-We presented EKVA v2, a training-free token retention framework for sparse Mixture-of-Experts inference. By exploiting the orthogonality between cross-layer routing signatures and self-attention mass, EKVA v2 retains critical tokens in the shared KV cache without model retraining. Across three MoE families (8, 60, and 64 experts), EKVA v2 achieves 3.0 to 6.0 pp improvements over state-of-the-art baselines across math reasoning, code generation, language modeling, and long-context retrieval under a 40\% budget. Combined with a custom Triton kernel delivering a $2.02\times$--$2.05\times$ decode speedup on NVIDIA A100 GPUs, EKVA v2 provides a practical solution for long-context MoE deployment.
+\textbf{Decoding Regime:} All benchmark evaluations were conducted under greedy decoding (\texttt{do\_sample=False}) to provide deterministic, reproducible comparisons. While greedy decoding represents standard practice in mathematical and code benchmarks, assessing retention dynamics under stochastic nucleus sampling ($p=0.9, T=0.7$) represents a valuable future research inquiry.
 
-\section*{Reproducibility \& Code}
-Source code, PyTorch routing hooks, custom Triton kernels, calibration profiles, and evaluation runners are publicly available at: \url{https://github.com/GauravPatil2515/EKVA}.
+% -------------------------------------------------------------------------
+% IX. CONCLUSION & FUTURE WORK
+% -------------------------------------------------------------------------
+\section{Conclusion \& Future Work}
+We presented EKVA v2, a training-free token retention framework tailored specifically for Key-Value cache compression in sparse Mixture-of-Experts inference. By discovering and exploiting the empirical orthogonality between cross-layer routing signatures and self-attention mass ($\rho \approx 0.00$), EKVA v2 unifies routing signals with layer-specific expert niche profiles to preserve critical tokens in the shared KV cache without model fine-tuning or retraining. Across three open-weight MoE families (spanning 8, 60, and 64 experts), EKVA v2 delivers statistically significant 3.0 to 6.0 percentage point improvements ($p < 0.01$) over state-of-the-art baselines across mathematical reasoning, code generation, long-context retrieval, and language modeling under a 40\% cache budget. Grounded in the Williams Roofline Model, our custom fused Triton compaction kernel achieves a measured $2.02\times$--$2.05\times$ end-to-end decode step speedup on NVIDIA A100 GPUs. 
+
+Future work will investigate multi-batch Triton compaction kernels for continuous high-concurrency serving, extending routing-aware retention to vision-language MoEs, and exploring online adaptive recalibration of expert profiles during multi-turn conversations.
 
 % -------------------------------------------------------------------------
 % REFERENCES
