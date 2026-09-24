@@ -128,7 +128,8 @@ def load_model_and_tokenizer(model_name: str, use_4bit: Optional[bool] = None):
         want_4bit = use_4bit if use_4bit is not None else (total_vram_gb < 24.0)
         if want_4bit:
             try:
-                import bitsandbytes  # noqa: F401
+                import importlib
+                importlib.import_module("bitsandbytes")
                 from transformers import BitsAndBytesConfig
                 load_kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_4bit=True,

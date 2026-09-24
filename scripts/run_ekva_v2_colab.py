@@ -52,14 +52,16 @@ def main():
         try:
             from scripts.run_ekva_v2_experiments import run_full_evaluation_pipeline
         except ImportError:
-            from run_ekva_v2_experiments import run_full_evaluation_pipeline
+            import importlib
+            run_full_evaluation_pipeline = importlib.import_module("run_ekva_v2_experiments").run_full_evaluation_pipeline
         run_full_evaluation_pipeline(models=models, out_dir=args.out_dir)
     else:
         print("\n[Step 2/3] Running REAL evaluation suite (real weights, real generations, real scoring)...")
         try:
             from scripts.run_real_evaluation_suite import main as run_real_main
         except ImportError:
-            from run_real_evaluation_suite import main as run_real_main
+            import importlib
+            run_real_main = importlib.import_module("run_real_evaluation_suite").main
         for m in models:
             sys.argv = [
                 "run_real_evaluation_suite.py", "--model", m, "--out-dir", args.out_dir,
@@ -75,7 +77,8 @@ def main():
     try:
         from experiments.analytical_roofline_model import run_roofline_experiment
     except ImportError:
-        from analytical_roofline_model import run_roofline_experiment
+        import importlib
+        run_roofline_experiment = importlib.import_module("analytical_roofline_model").run_roofline_experiment
     run_roofline_experiment(models=models, out_dir=args.out_dir)
 
     print("\n" + "=" * 70)

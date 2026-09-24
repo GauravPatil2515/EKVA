@@ -310,7 +310,8 @@ def run_real_evaluation(
         if use_4bit or total_vram_gb < 24.0:
             print(f"💡 Detected {total_vram_gb:.1f} GB VRAM GPU. Enabling 4-bit quantization (bitsandbytes) to fit comfortably.")
             try:
-                import bitsandbytes
+                import importlib
+                importlib.import_module("bitsandbytes")
                 from transformers import BitsAndBytesConfig
                 load_kwargs["quantization_config"] = BitsAndBytesConfig(
                     load_in_4bit=True,

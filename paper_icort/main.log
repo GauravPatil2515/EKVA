@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  13 SEP 2026 20:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.3.12)  22 SEP 2026 01:18
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -435,49 +435,83 @@ Package microtype Info: Loading configuration file microtype.cfg.
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.cfg
 File: microtype.cfg 2023/03/13 v3.1a microtype main configuration file (RS)
 ))
-Package hyperref Info: Option `colorlinks' set `true' on input line 15.
+(/usr/share/texlive/texmf-dist/tex/latex/enumitem/enumitem.sty
+Package: enumitem 2019/06/20 v3.9 Customized lists
+\labelindent=\skip58
+\enit@outerparindent=\dimen194
+\enit@toks=\toks26
+\enit@inbox=\box56
+\enit@count@id=\count299
+\enitdp@description=\count300
+)
+(/usr/share/texlive/texmf-dist/tex/latex/sttools/flushend.sty
+Package: flushend 2021/10/04 v4.0 Balancing columns in twocolumn mode
+\flushend@@lastskip@a=\skip59
+\flushend@@lastskip@b=\skip60
+\flushend@@lastnode=\count301
+\var@@loop@iter=\count302
+\var@@temp@spread=\dimen195
+\var@@temp@a=\dimen196
+\var@@temp@loop=\dimen197
+\flushend@@page@rule=\dimen198
+\flushend@@varbox@lastpage=\box57
+\flushend@@varbox@a=\box58
+\flushend@@varbox@c=\box59
+\flushend@@tempbox@a=\box60
+\flushend@@tempbox@c=\box61
+\flushend@@floatbox=\box62
+\@viper=\box63
+\hold@viper=\box64
+\atColsBreak=\toks27
+\atColsEnd=\toks28
+\oldbreak@skip=\dimen199
+)
+(/usr/share/texlive/texmf-dist/tex/latex/placeins/placeins.sty
+Package: placeins 2005/04/18  v 2.2
+)
+Package hyperref Info: Option `colorlinks' set `true' on input line 18.
 
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count299
-\l__pdf_internal_box=\box56
+\l__color_backend_stack_int=\count303
+\l__pdf_internal_box=\box65
 )
 (./main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
 
 -- Lines per column: 56 (exact).
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count300
-\scratchdimen=\dimen194
-\scratchbox=\box57
-\nofMPsegments=\count301
-\nofMParguments=\count302
-\everyMPshowfont=\toks26
-\MPscratchCnt=\count303
-\MPscratchDim=\dimen195
-\MPnumerator=\count304
-\makeMPintoPDFobject=\count305
-\everyMPtoPDFconversion=\toks27
+\scratchcounter=\count304
+\scratchdimen=\dimen256
+\scratchbox=\box66
+\nofMPsegments=\count305
+\nofMParguments=\count306
+\everyMPshowfont=\toks29
+\MPscratchCnt=\count307
+\MPscratchDim=\dimen257
+\MPnumerator=\count308
+\makeMPintoPDFobject=\count309
+\everyMPtoPDFconversion=\toks30
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -487,25 +521,25 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 18.
+Package hyperref Info: Link coloring ON on input line 21.
 
 (./main.out) (./main.out)
 \@outlinefile=\write3
 \openout3 = `main.out'.
 
-LaTeX Info: Redefining \microtypecontext on input line 18.
-Package microtype Info: Applying patch `item' on input line 18.
-Package microtype Info: Applying patch `toc' on input line 18.
-Package microtype Info: Applying patch `eqnum' on input line 18.
-Package microtype Info: Applying patch `footnote' on input line 18.
-Package microtype Info: Applying patch `verbatim' on input line 18.
+LaTeX Info: Redefining \microtypecontext on input line 21.
+Package microtype Info: Applying patch `item' on input line 21.
+Package microtype Info: Applying patch `toc' on input line 21.
+Package microtype Info: Applying patch `eqnum' on input line 21.
+Package microtype Info: Applying patch `footnote' on input line 21.
+Package microtype Info: Applying patch `verbatim' on input line 21.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 18.
+LaTeX Info: Redefining \showhyphens on input line 21.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -513,11 +547,13 @@ Package microtype Info: No adjustment of character kerning.
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-ptm.cfg
 File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 )
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 66.
+
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-cmr.cfg
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 47.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 66.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -526,7 +562,7 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 47.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 66.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -534,55 +570,58 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
-)
-<figures/ekva_architecture_diagram.png, id=70, 709.2096pt x 362.3136pt>
-File: figures/ekva_architecture_diagram.png Graphic file (type png)
-<use figures/ekva_architecture_diagram.png>
-Package pdftex.def Info: figures/ekva_architecture_diagram.png  used on input l
-ine 63.
-(pdftex.def)             Requested size: 252.0pt x 128.73555pt.
- [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf
--dist/fonts/enc/dvips/base/8r.enc}
+) [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texm
+f-dist/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 9
-8.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+<figures/ekva_architecture_diagram.png, id=104, 709.2096pt x 362.3136pt>
+File: figures/ekva_architecture_diagram.png Graphic file (type png)
+<use figures/ekva_architecture_diagram.png>
+Package pdftex.def Info: figures/ekva_architecture_diagram.png  used on input l
+ine 86.
+(pdftex.def)             Requested size: 252.0pt x 128.73555pt.
+ [2 <./figures/ekva_architecture_diagram.png>]
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
+28.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `pcr' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-
-[2 <./figures/ekva_architecture_diagram.png>]
-<figures/fig2_ablation_curves.png, id=132, 1293.1512pt x 354.3639pt>
+ [3]
+<figures/fig2_ablation_curves.png, id=158, 1293.1512pt x 354.3639pt>
 File: figures/fig2_ablation_curves.png Graphic file (type png)
 <use figures/fig2_ablation_curves.png>
-Package pdftex.def Info: figures/fig2_ablation_curves.png  used on input line 1
-73.
+Package pdftex.def Info: figures/fig2_ablation_curves.png  used on input line 2
+25.
 (pdftex.def)             Requested size: 516.0pt x 141.40239pt.
-<figures/layerwise_correlation_heatmap.png, id=134, 1004.3121pt x 298.2342pt>
+<figures/layerwise_correlation_heatmap.png, id=161, 1004.3121pt x 298.2342pt>
 File: figures/layerwise_correlation_heatmap.png Graphic file (type png)
 <use figures/layerwise_correlation_heatmap.png>
 Package pdftex.def Info: figures/layerwise_correlation_heatmap.png  used on inp
-ut line 183.
+ut line 235.
 (pdftex.def)             Requested size: 516.0pt x 153.23509pt.
-<figures/analytical_roofline.png, id=136, 1148.8521pt x 390.4989pt>
+<figures/analytical_roofline.png, id=163, 1148.8521pt x 390.4989pt>
 File: figures/analytical_roofline.png Graphic file (type png)
 <use figures/analytical_roofline.png>
-Package pdftex.def Info: figures/analytical_roofline.png  used on input line 19
-4.
+Package pdftex.def Info: figures/analytical_roofline.png  used on input line 24
+6.
 (pdftex.def)             Requested size: 252.0pt x 85.6538pt.
 
-Underfull \hbox (badness 1533) in paragraph at lines 199--200
+Underfull \hbox (badness 1533) in paragraph at lines 251--252
 []\OT1/ptm/m/n/10 (+20) We pro-file au-tore-gres-sive de-code at-ten-tion un-de
 r the
  []
 
-[3] (./main.bbl [4 <./figures/fig2_ablation_curves.png> <./figures/layerwise_co
-rrelation_heatmap.png>])
+[4]
+Underfull \vbox (badness 1817) has occurred while \output is active []
+
+ [5 <./figures/fig2_ablation_curves.png> <./figures/layerwise_correlation_heatm
+ap.png> <./figures/analytical_roofline.png>] (./main.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -594,24 +633,34 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[5
-
- <./figures/analytical_roofline.png>] (./main.aux)
+- LAST -
+Extra skip:0.0pt
+Left:571.79987pt/2.16492pt
+Right:580.4999pt/1.73193pt
+Split: 576.14987pt
+Output:576.14987pt
+Pageshrink: 7.75006pt
+Pagestretch: 32.5999pt
+@colht:672.0pt
+FLUSHEND [output]: 576.14987pt
+FLUSHEND [leftcolumn badness]: 0
+FUSHEND [rightcolumn badness]: 22
+[6] (./main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: C06A266615B324B7B0BF1AFB8F592F9B;2910.
+(rerunfilecheck)             Checksum: 59D310F8CB098A6D3FE8D564917939D2;3831.
  ) 
 Here is how much of TeX's memory you used:
- 13571 strings out of 476182
- 212567 string characters out of 5795595
- 1956975 words of memory out of 5000000
- 35043 multiletter control sequences out of 15000+600000
- 616816 words of font info for 313 fonts, out of 8000000 for 9000
+ 14153 strings out of 476182
+ 222580 string characters out of 5795595
+ 1958975 words of memory out of 5000000
+ 35544 multiletter control sequences out of 15000+600000
+ 622208 words of font info for 365 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,12n,79p,1653b,606s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,79p,1885b,515s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex9.pfb></usr/
 share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/
@@ -636,10 +685,10 @@ ier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb>
 </usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/te
 xlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dis
 t/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (5 pages, 1442078 bytes).
+Output written on main.pdf (6 pages, 1462978 bytes).
 PDF statistics:
- 284 PDF objects out of 1000 (max. 8388607)
- 214 compressed objects within 3 object streams
- 41 named destinations out of 1000 (max. 500000)
- 71309 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 316 PDF objects out of 1000 (max. 8388607)
+ 245 compressed objects within 3 object streams
+ 49 named destinations out of 1000 (max. 500000)
+ 71845 words of extra memory for PDF output out of 74296 (max. 10000000)
 

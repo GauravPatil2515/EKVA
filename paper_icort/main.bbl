@@ -43,13 +43,14 @@ Y.~Li, Y.~Huang, B.~Yang, B.~Venkitesh, S.~Avestimehr, and M.~Annavaram,
   preprint arXiv:2404.14469}, 2024.
 
 \bibitem{cake2025}
-A.~Chen \emph{et~al.}, ``Cake: Layer-wise attention-entropy kv cache allocation
-  for large language models,'' \emph{arXiv preprint arXiv:2502.04189}, 2025.
+A.~Chen, Z.~Song, J.~Du, and B.~Chen, ``Cake: Layer-wise attention-entropy kv
+  cache allocation for large language models,'' \emph{arXiv preprint
+  arXiv:2502.04189}, 2025.
 
 \bibitem{feng2025adakv}
-Z.~Feng \emph{et~al.}, ``Ada-kv: Optimizing kv cache eviction for llms with
-  adaptive budget allocation,'' in \emph{Advances in Neural Information
-  Processing Systems (NeurIPS)}, 2025.
+Z.~Feng, W.~Chen, S.~Peng, B.~Chen, and Z.~Song, ``Ada-kv: Optimizing kv cache
+  eviction for llms with adaptive budget allocation,'' in \emph{Advances in
+  Neural Information Processing Systems (NeurIPS)}, 2025.
 
 \bibitem{liu2025pikv}
 R.~Liu \emph{et~al.}, ``Pikv: Parallel and efficient kv cache serving for
@@ -69,6 +70,11 @@ D.~Balashov and A.~Ponomarova, ``Triroute: Joint learning of attention,
 D.~Dai \emph{et~al.}, ``Deepseek-moe: Towards ultimate expertise in
   mixture-of-experts language models,'' \emph{arXiv preprint arXiv:2401.06066},
   2024.
+
+\bibitem{keeney1993decisions}
+R.~L. Keeney and H.~Raiffa, \emph{Decisions with Multiple Objectives:
+  Preferences and Value Trade-Offs}.\hskip 1em plus 0.5em minus 0.4em\relax
+  Cambridge University Press, 1993.
 
 \bibitem{williams2009roofline}
 S.~Williams, A.~Waterman, and D.~Patterson, ``Roofline: An insightful visual

@@ -1,0 +1,73 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{dao2023flashattention2}
+\citation{xiao2023streamingllm}
+\citation{zhang2023h2o}
+\citation{li2024snapkv}
+\citation{cake2025}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\citation{xiao2023streamingllm}
+\citation{zhang2023h2o}
+\citation{li2024snapkv}
+\citation{feng2025adakv}
+\citation{cake2025}
+\citation{liu2025pikv}
+\citation{sun2026moend}
+\citation{balashov2026triroute}
+\citation{dai2024deepseekmoe}
+\citation{keeney1993decisions}
+\citation{keeney1993decisions}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {EKVA v2 System Architecture.} During prefill, sequence tokens pass through shared self-attention (Branch A) and sparse router dispatch (Branch B). Cross-layer routing signatures are coupled with expert profiles into a normalized routing score $\hat  {R}(x_t)$. The utility fusion module combines orthogonal attention and routing signals. A fused Triton kernel gathers retained KV tensors directly in on-chip SRAM for accelerated autoregressive decoding, enabling real-time LLM inference on tactical-edge accelerators in defense range instrumentation environments.}}{2}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{2}{\textbf {EKVA v2 System Architecture.} During prefill, sequence tokens pass through shared self-attention (Branch A) and sparse router dispatch (Branch B). Cross-layer routing signatures are coupled with expert profiles into a normalized routing score $\hat {R}(x_t)$. The utility fusion module combines orthogonal attention and routing signals. A fused Triton kernel gathers retained KV tensors directly in on-chip SRAM for accelerated autoregressive decoding, enabling real-time LLM inference on tactical-edge accelerators in defense range instrumentation environments}{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Methodology}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Problem Formulation \& Expert Profile Calibration}{2}{subsection.3.1}\protected@file@percent }
+\newlabel{eq:knapsack}{{1}{2}{Problem Formulation \& Expert Profile Calibration}{equation.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Routing Signature Utility Score}{2}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:routing_score}{{2}{2}{Routing Signature Utility Score}{equation.3.2}{}}
+\newlabel{eq:saliency}{{3}{2}{Routing Signature Utility Score}{equation.3.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Algorithmic flow of EKVA v2 token retention.}}{3}{figure.2}\protected@file@percent }
+\newlabel{alg:ekva}{{2}{3}{Algorithmic flow of EKVA v2 token retention}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Fused Cache Compaction}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Risk-Sensitive Extension: Asymmetric Loss and Minimax Regret}{3}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Experimental Setup}{3}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Results and Analysis}{3}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Benchmark Performance Dynamics}{3}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Empirical Pilot: Range-Telemetry MoE Retention}{3}{subsection.5.2}\protected@file@percent }
+\citation{williams2009roofline}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Benchmark evaluation at 40\% KV budget. Values report mean and [95\% bootstrap CI] over $B=10,000$ resamples. $^\dagger $ indicates statistically significant improvement ($p < 0.01$) over SnapKV. (DeepSeek-MoE-16B evaluations are summarized in text).}}{4}{table.1}\protected@file@percent }
+\newlabel{tab:main_results}{{I}{4}{Benchmark evaluation at 40\% KV budget. Values report mean and [95\% bootstrap CI] over $B=10,000$ resamples. $^\dagger $ indicates statistically significant improvement ($p < 0.01$) over SnapKV. (DeepSeek-MoE-16B evaluations are summarized in text)}{table.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Range-telemetry retrieval accuracy on trained 4-layer MoE ($n=2,048$, mean [95\% bootstrap CI]).}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:telemetry_retention}{{II}{4}{Range-telemetry retrieval accuracy on trained 4-layer MoE ($n=2,048$, mean [95\% bootstrap CI])}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Performance Dynamics Across Budgets (20\% to 100\%)}{4}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Layer-wise Orthogonality Verification}{4}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Systems Roofline \& Hardware Acceleration}{4}{section.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {Downstream Performance Across Budgets (20\% to 100\%).} Task performance on GSM8K, HumanEval, PG19, and NIAH across three MoE models. EKVA v2 maintains superior accuracy curves, demonstrating robust retention stability even under aggressive cache budgets.}}{5}{figure.3}\protected@file@percent }
+\newlabel{fig:ablation_curves}{{3}{5}{\textbf {Downstream Performance Across Budgets (20\% to 100\%).} Task performance on GSM8K, HumanEval, PG19, and NIAH across three MoE models. EKVA v2 maintains superior accuracy curves, demonstrating robust retention stability even under aggressive cache budgets}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho _l(R_l, \hat  {A}_l)$ remains strictly bounded within $[-0.019, +0.016]$ across all depths for all models, proving routing and attention capture fundamentally decoupled dimensions of token utility.}}{5}{figure.4}\protected@file@percent }
+\newlabel{fig:layerwise_correlation}{{4}{5}{\textbf {Layer-wise Orthogonality Across Depth.} Pearson correlation $\rho _l(R_l, \hat {A}_l)$ remains strictly bounded within $[-0.019, +0.016]$ across all depths for all models, proving routing and attention capture fundamentally decoupled dimensions of token utility}{figure.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {A100 Roofline Analysis and Measured Decode Speedup.} (Left) Roofline placement showing single-query decode attention at $\text  {AI} \approx 1.0\text  { FLOPs/Byte} \ll 200.6$, placing execution deep within the memory-bandwidth-bound regime. (Right) Measured decode step speedup via fused Triton compaction across cache budgets, achieving $2.02\times $--$2.05\times $ speedup at a 40\% budget, directly applicable to airborne, shipboard, and ground-based range computing nodes.}}{5}{figure.5}\protected@file@percent }
+\newlabel{fig:roofline}{{5}{5}{\textbf {A100 Roofline Analysis and Measured Decode Speedup.} (Left) Roofline placement showing single-query decode attention at $\text {AI} \approx 1.0\text { FLOPs/Byte} \ll 200.6$, placing execution deep within the memory-bandwidth-bound regime. (Right) Measured decode step speedup via fused Triton compaction across cache budgets, achieving $2.02\times $--$2.05\times $ speedup at a 40\% budget, directly applicable to airborne, shipboard, and ground-based range computing nodes}{figure.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Component ablation on Qwen1.5-MoE-A2.7B at 40\% budget. Values report mean and [95\% bootstrap CI].}}{5}{table.3}\protected@file@percent }
+\newlabel{tab:ablation}{{III}{5}{Component ablation on Qwen1.5-MoE-A2.7B at 40\% budget. Values report mean and [95\% bootstrap CI]}{table.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Value-of-Information Ablation \& Discussion}{5}{section.7}\protected@file@percent }
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{dao2023flashattention2}{1}
+\bibcite{xiao2023streamingllm}{2}
+\bibcite{zhang2023h2o}{3}
+\bibcite{li2024snapkv}{4}
+\bibcite{cake2025}{5}
+\bibcite{feng2025adakv}{6}
+\bibcite{liu2025pikv}{7}
+\bibcite{sun2026moend}{8}
+\bibcite{balashov2026triroute}{9}
+\bibcite{dai2024deepseekmoe}{10}
+\bibcite{keeney1993decisions}{11}
+\bibcite{williams2009roofline}{12}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Range Technology Applications}{6}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Conclusion, Limitations \& Future Work}{6}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{6}{section*.2}\protected@file@percent }
+\gdef \@abspage@last{6}
