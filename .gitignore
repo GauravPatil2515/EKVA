@@ -10,6 +10,38 @@ dist/
 .mypy_cache/
 .ipynb_checkpoints/
 
+# ── Research manuscripts, LaTeX packages & Papers (Confidential) ─────────────
+paper/
+paper_ieee/
+paper_icort/
+LaTex_Package/
+LaTex_Package.zip
+EKVA_IEEE_Paper_Package.zip
+ekva_paper_artifacts.zip
+ekva_paper_artifacts/
+*.docx
+College-Authorization-letter*
+
+# ── Internal research reports, audits & review files ─────────────────────────
+EKVA_IEEE_Peer_Review.md
+EKVA_Research_Advisory.md
+EKVA_v2_Architectural_Rescue.md
+EKVA_v3_Data_Audit_and_Mechanism.md
+ekva_audit_report.md
+PLAN.md
+docs/PUBLICATION_PLAN.md
+docs/review.md
+docs/ekva_research_strategy.md
+.kilo/
+techopedia web loggo.png
+
+# ── Raw experiment dumps and backup zip bundles ──────────────────────────────
+*.zip
+ekva_v2_real_results/
+ekva_v2_real_results*/
+ekva_v2_results/
+ekva_v2_results*/
+
 # ── Generated experiment outputs (keep dir, ignore contents) ──────────────
 output/*.pt
 output/*.png

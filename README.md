@@ -241,8 +241,7 @@ EKVA/
 ├── experiments/                # Research Question sweeps (RQ1, RQ2, RQ3, Roofline analysis)
 ├── notebooks/                  # 1-click Google Colab runner (EKVA_v2_Colab_Runner.ipynb)
 ├── tests/                      # Full pytest unit test suite (31/31 passed)
-├── paper_icort/                # IEEE camera-ready conference paper manuscript (main.tex, main.pdf)
-├── docs/                       # Publication plan, research roadmap, and benchmark documentation
+├── docs/                       # Architecture guides, benchmark docs, and zero-cost guide
 ├── pyproject.toml              # Build system specification (PEP 621)
 ├── setup.py                    # Package installer
 └── LICENSE                     # MIT License
