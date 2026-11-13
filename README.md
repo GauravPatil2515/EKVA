@@ -49,6 +49,10 @@ Existing token-eviction algorithms (**SnapKV**, **H2O**, **StreamingLLM**) prune
 - **🔄 Dynamic Streaming Recalibration:** Optional sliding-window EMA recalibration cascade adapts token budgets dynamically during ultra-long multi-turn generation.
 - **💻 Hardware-Agnostic & Free-Tier Ready:** Fully verified on NVIDIA A100 (80GB) and tested on Google Colab free-tier T4 GPUs with 4-bit quantization support.
 
+<p align="center">
+  <img src="assets/radar_inference_profile.png" alt="Multi-Dimensional Inference Profile" width="55%" style="border-radius: 8px;" />
+</p>
+
 ---
 
 ## 📊 Comprehensive Benchmarks (40% KV Budget)
@@ -94,6 +98,10 @@ Layer-wise empirical profiling shows that the Pearson correlation between attent
 - **DeepSeek-MoE-16B:** $\rho = +0.002$
 
 Because $\rho \approx 0.00$, routing history supplies an independent, orthogonal signal that identifies critical reasoning anchors completely missed by self-attention.
+
+<p align="center">
+  <img src="assets/token_retention_mechanisms.png" alt="Mechanistic Token Retention in Reasoning Chains" width="100%" style="border-radius: 8px;" />
+</p>
 
 ---
 
@@ -209,6 +217,10 @@ Because standard PyTorch slicing operations create expensive DRAM roundtrips whe
 - **$2.02\times$ to $2.05\times$ measured decode step speedup** on NVIDIA A100 GPUs.
 - **60% reduction in KV cache memory footprint** without memory fragmentation.
 - **Zero synchronization bubbles** across tensor parallel worker threads.
+
+<p align="center">
+  <img src="assets/sram_kernel_dataflow.png" alt="SRAM vs DRAM Hardware Dataflow" width="95%" style="border-radius: 8px;" />
+</p>
 
 ---
 
