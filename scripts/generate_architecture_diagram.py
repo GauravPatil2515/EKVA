@@ -95,10 +95,15 @@ def create_architecture_diagram(output_path):
     ax.annotate('', xy=(87, 10.5), xytext=(87, 13),
                 arrowprops=dict(arrowstyle="->", color=b_edge, lw=1.4))
 
+    import os
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0.05)
     plt.close()
     print(f"Architecture diagram successfully saved to {output_path}")
 
 if __name__ == "__main__":
-    create_architecture_diagram("paper_ieee/figures/ekva_architecture_diagram.png")
+    import os
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    target_path = os.path.join(base_dir, "assets", "ekva_architecture_diagram.png")
+    create_architecture_diagram(target_path)
