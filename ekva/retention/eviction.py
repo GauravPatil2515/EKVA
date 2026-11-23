@@ -11,6 +11,7 @@ def select_topk_indices(
     saliency_scores: torch.Tensor,
     budget: int,
     protect_sink_tokens: int = 4,
+    protected_prefix_len: int = 0,
 ) -> torch.Tensor:
     """Computes sorted top-B indices to retain for each batch/head.
 
@@ -18,12 +19,14 @@ def select_topk_indices(
         saliency_scores: (B, T) or (B, H, T) tensor.
         budget: Maximum number of tokens B to retain.
         protect_sink_tokens: Number of initial tokens guaranteed retention.
+        protected_prefix_len: Number of initial tokens pinned (immutable).
 
     Returns:
         torch.LongTensor of shape (B, budget) or (B, H, budget) with sorted indices.
     """
     T = saliency_scores.shape[-1]
     budget = max(1, min(budget, T))
+    prefix_bound = min(T, max(protect_sink_tokens, protected_prefix_len))
 
     if budget >= T:
         # Full retention
@@ -31,8 +34,16 @@ def select_topk_indices(
         shape = list(saliency_scores.shape[:-1]) + [T]
         return idx.expand(shape)
 
+    # If prefix pinning is requested, ensure prefix tokens are always picked first
+    scores_copy = saliency_scores.clone()
+    if prefix_bound > 0:
+        if scores_copy.dim() == 2:
+            scores_copy[:, :prefix_bound] = float("inf")
+        elif scores_copy.dim() == 3:
+            scores_copy[:, :, :prefix_bound] = float("inf")
+
     # Topk selection along last dimension
-    _, topk_indices = torch.topk(saliency_scores, k=budget, dim=-1, largest=True, sorted=False)
+    _, topk_indices = torch.topk(scores_copy, k=budget, dim=-1, largest=True, sorted=False)
 
     # Preserve temporal order by sorting indices ascending
     sorted_indices, _ = torch.sort(topk_indices, dim=-1)
@@ -66,7 +77,14 @@ def compact_kv_tensor(
         raise ValueError(f"Unexpected index shape: {retained_indices.shape}")
 
     # Gather along time dimension (dim=2)
-    compacted = torch.gather(tensor, dim=2, index=idx_expanded)
+    # PyTorch CPU kernels do not implement scatter_gather for float8 types; view as uint8 for gather
+    orig_dtype = tensor.dtype
+    if "float8" in str(orig_dtype):
+        # 1 byte view
+        raw_byte_view = tensor.view(torch.uint8)
+        compacted = torch.gather(raw_byte_view, dim=2, index=idx_expanded).view(orig_dtype)
+    else:
+        compacted = torch.gather(tensor, dim=2, index=idx_expanded)
     return compacted.contiguous()
 
 
@@ -76,6 +94,7 @@ def evict_shared_kv_cache(
     saliency_scores: torch.Tensor,
     budget: int,
     protect_sink_tokens: int = 4,
+    protected_prefix_len: int = 0,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Evicts low-saliency tokens and returns compacted (K, V) tensors and kept indices.
 
@@ -85,6 +104,7 @@ def evict_shared_kv_cache(
         saliency_scores: (B, T) or (B, H, T)
         budget: Number of KV tokens to retain.
         protect_sink_tokens: Number of initial sink tokens.
+        protected_prefix_len: Number of initial prefix tokens to pin.
 
     Returns:
         Tuple of:
@@ -96,6 +116,7 @@ def evict_shared_kv_cache(
         saliency_scores=saliency_scores,
         budget=budget,
         protect_sink_tokens=protect_sink_tokens,
+        protected_prefix_len=protected_prefix_len,
     )
 
     compacted_k = compact_kv_tensor(key_cache, indices)

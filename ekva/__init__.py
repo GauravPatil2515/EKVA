@@ -25,8 +25,11 @@ from ekva.budget.policies import (
     DynamicKVStylePolicy,
 )
 from ekva.simulator import ExpertKVBuffer
+from ekva.patch import patch_moe_ekva, EKVAPatchedModel
 
 __all__ = [
+    "patch_moe_ekva",
+    "EKVAPatchedModel",
     "calibrate_expert_entropy",
     "ExpertStats",
     "derive_kv_budget",

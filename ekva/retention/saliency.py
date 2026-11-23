@@ -94,10 +94,40 @@ def compute_sink_score(seq_len: int, num_sink_tokens: int = 4, device: Optional[
     return scores
 
 
+def reduce_gqa_heads(
+    attn_scores: torch.Tensor,
+    num_kv_heads: int,
+) -> torch.Tensor:
+    """Pools Query-head attention scores down to KV heads for GQA alignment.
+
+    Args:
+        attn_scores: (B, H_q, T) Query-head attention scores.
+        num_kv_heads: Target number of KV heads H_kv.
+
+    Returns:
+        (B, H_kv, T) pooled attention scores aligned with KV cache heads.
+    """
+    if attn_scores.dim() != 3:
+        return attn_scores
+    B, H_q, T = attn_scores.shape
+    if H_q == num_kv_heads:
+        return attn_scores
+    if H_q % num_kv_heads != 0:
+        raise ValueError(f"Query heads ({H_q}) must be divisible by KV heads ({num_kv_heads})")
+    
+    group_size = H_q // num_kv_heads
+    # (B, H_kv, group_size, T) -> mean over group
+    pooled = attn_scores.view(B, num_kv_heads, group_size, T).mean(dim=2)
+    return pooled
+
+
 def combined_token_saliency(
     attn_scores: torch.Tensor,               # (B, T) or (B, H, T)
     routing_scores: Optional[torch.Tensor],  # (B, T)
     num_sink_tokens: int = 4,
+    protected_prefix_len: int = 0,
+    attention_mask: Optional[torch.Tensor] = None, # (B, T)
+    num_kv_heads: Optional[int] = None,
     recency_tau: float = 64.0,
     w_a: float = 0.60,
     w_r: float = 0.30,
@@ -108,10 +138,20 @@ def combined_token_saliency(
 
     S(x_t) = w_a * A_hat(x_t) + w_r * R(x_t) + w_s * Sink(x_t) + w_c * Recency(x_t)
 
+    Supports:
+      - protected_prefix_len: Pins first N tokens (system prompt, RAG prefix).
+      - attention_mask: Excludes padding tokens by assigning -inf.
+      - num_kv_heads: Pools GQA query heads down to KV heads.
+
     Returns:
-        Tensor of shape identical to attn_scores with combined retention saliency.
+        Tensor of shape (B, T) or (B, H_kv, T) with combined retention saliency.
     """
     device = attn_scores.device
+    
+    # Handle GQA reduction if requested
+    if num_kv_heads is not None and attn_scores.dim() == 3:
+        attn_scores = reduce_gqa_heads(attn_scores, num_kv_heads)
+
     T = attn_scores.shape[-1]
 
     # Normalize attention scores to [0, 1]
@@ -136,11 +176,20 @@ def combined_token_saliency(
             r_norm = r_norm.unsqueeze(1)
         saliency = saliency + w_r * r_norm.to(device)
 
-    # Re-enforce explicit sink tokens to maximum saliency
-    if num_sink_tokens > 0:
+    # Prefix pinning: system prompt + attention sinks
+    prefix_bound = max(num_sink_tokens, protected_prefix_len)
+    if prefix_bound > 0:
         if saliency.dim() == 2:
-            saliency[:, :num_sink_tokens] = float("inf")
+            saliency[:, :prefix_bound] = float("inf")
         elif saliency.dim() == 3:
-            saliency[:, :, :num_sink_tokens] = float("inf")
+            saliency[:, :, :prefix_bound] = float("inf")
+
+    # Sequence padding mask handling: zero-out/penalize padding tokens
+    if attention_mask is not None:
+        # attention_mask: 1 for valid, 0 for pad
+        pad_mask = (attention_mask == 0)
+        while pad_mask.dim() < saliency.dim():
+            pad_mask = pad_mask.unsqueeze(1)
+        saliency = saliency.masked_fill(pad_mask, float("-inf"))
 
     return saliency
