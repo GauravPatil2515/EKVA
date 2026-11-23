@@ -26,6 +26,18 @@ def benchmark_compaction_suite(
     batch_size: int = 1,
     out_dir: str = "output/benchmark_crossover",
 ):
+    if not torch.cuda.is_available():
+        print("=" * 80)
+        print("⚠️ CUDA is not available in this environment.")
+        print("Skipping Triton GPU micro-benchmark (Triton requires an NVIDIA GPU).")
+        print("To run Triton benchmarks, please enable GPU: Runtime -> Change runtime type -> T4 GPU.")
+        print("=" * 80)
+        os.makedirs(out_dir, exist_ok=True)
+        cpu_placeholder = [{"status": "skipped", "reason": "CUDA not available"}]
+        with open(os.path.join(out_dir, "triton_crossover_results.json"), "w") as f:
+            json.dump(cpu_placeholder, f, indent=2)
+        return
+
     apply_safety_guardrails(max_vram_fraction=0.65)
     device = torch.device(f"cuda:{device_id}")
     dtype = torch.float16
@@ -36,8 +48,9 @@ def benchmark_compaction_suite(
     # Safe sequence lengths for local 6GB GPU
     seq_lens = [512, 1024, 2048, 4096, 8192]
 
+    dev_name = torch.cuda.get_device_name(device) if torch.cuda.is_available() else "CPU"
     print("=" * 80)
-    print(f"🚀 EKVA TRITON COMPACTION MICRO-BENCHMARK (Device: {torch.cuda.get_device_name(device)})")
+    print(f"🚀 EKVA TRITON COMPACTION MICRO-BENCHMARK (Device: {dev_name})")
     print(f"Batch: {batch_size} | Heads: {num_heads} | HeadDim: {head_dim} | Budget: {budget_ratio * 100:.0f}%")
     print("=" * 80)
 
