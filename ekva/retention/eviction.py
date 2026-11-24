@@ -69,6 +69,10 @@ def compact_kv_tensor(
     if budget >= T:
         return tensor
 
+    # Ensure indices are on the same device as the target tensor (crucial for multi-GPU sharding)
+    if retained_indices.device != tensor.device:
+        retained_indices = retained_indices.to(tensor.device)
+
     if retained_indices.dim() == 2:  # (B, budget) -> expand to (B, H, budget, D)
         idx_expanded = retained_indices.unsqueeze(1).unsqueeze(-1).expand(B, H, budget, D)
     elif retained_indices.dim() == 3: # (B, H, budget) -> expand to (B, H, budget, D)

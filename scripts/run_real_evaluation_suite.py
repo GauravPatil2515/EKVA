@@ -123,8 +123,18 @@ def load_model_and_tokenizer(model_name: str, use_4bit: Optional[bool] = None):
     }
     quant_used = "none"
     if device == "cuda":
-        total_vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
+        num_gpus = torch.cuda.device_count()
+        total_vram_gb = sum(torch.cuda.get_device_properties(i).total_memory / (1024**3) for i in range(num_gpus))
         want_4bit = use_4bit if use_4bit is not None else (total_vram_gb < 24.0)
+        
+        # When multi-GPU is available (e.g. Kaggle GPU T4 x2 with 30GB total VRAM),
+        # 'auto' balances layers cleanly across all GPUs with zero CPU offload.
+        # On single GPU, 'auto' avoids monolithic loading spikes.
+        device_map_setting = "auto"
+
         if want_4bit:
             try:
                 import importlib
@@ -135,17 +145,16 @@ def load_model_and_tokenizer(model_name: str, use_4bit: Optional[bool] = None):
                     bnb_4bit_compute_dtype=torch.float16,
                     bnb_4bit_quant_type="nf4",
                 )
-                # Map strictly to GPU to avoid accelerate meta tensor copy bug
-                load_kwargs["device_map"] = {"": 0}
+                load_kwargs["device_map"] = device_map_setting
                 quant_used = "4bit-nf4"
             except Exception as e:
                 print(f"⚠️ bitsandbytes 4-bit quantization unavailable ({e}). Loading in float16...")
                 load_kwargs["torch_dtype"] = torch.float16
-                load_kwargs["device_map"] = {"": 0}
+                load_kwargs["device_map"] = device_map_setting
                 quant_used = "fp16"
         else:
             load_kwargs["torch_dtype"] = torch.float16
-            load_kwargs["device_map"] = {"": 0}
+            load_kwargs["device_map"] = device_map_setting
             quant_used = "fp16"
     else:
         load_kwargs["torch_dtype"] = torch.float32
@@ -153,7 +162,8 @@ def load_model_and_tokenizer(model_name: str, use_4bit: Optional[bool] = None):
 
     model = AutoModelForCausalLM.from_pretrained(spec.hf_id, **load_kwargs)
     model.eval()
-    return model, tokenizer, device, quant_used
+    effective_device = getattr(model, "device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    return model, tokenizer, effective_device, quant_used
 
 
 # ---------------------------------------------------------------------------

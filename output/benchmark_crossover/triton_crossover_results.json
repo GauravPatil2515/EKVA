@@ -1,0 +1,62 @@
+[
+  {
+    "seq_len": 512,
+    "budget": 256,
+    "torch_gather_ms": 0.0171,
+    "triton_compact_ms": 0.0129,
+    "triton_speedup": 1.32,
+    "bandwidth_gb_s": 75.72,
+    "decode_full_ms": 0.0183,
+    "decode_compact_ms": 0.0136,
+    "decode_saved_per_step_ms": 0.0047,
+    "breakeven_decode_steps": 3
+  },
+  {
+    "seq_len": 1024,
+    "budget": 512,
+    "torch_gather_ms": 0.022,
+    "triton_compact_ms": 0.0183,
+    "triton_speedup": 1.2,
+    "bandwidth_gb_s": 106.52,
+    "decode_full_ms": 0.0272,
+    "decode_compact_ms": 0.0184,
+    "decode_saved_per_step_ms": 0.0089,
+    "breakeven_decode_steps": 3
+  },
+  {
+    "seq_len": 2048,
+    "budget": 1024,
+    "torch_gather_ms": 0.0359,
+    "triton_compact_ms": 0.0337,
+    "triton_speedup": 1.07,
+    "bandwidth_gb_s": 115.99,
+    "decode_full_ms": 0.0405,
+    "decode_compact_ms": 0.0273,
+    "decode_saved_per_step_ms": 0.0132,
+    "breakeven_decode_steps": 3
+  },
+  {
+    "seq_len": 4096,
+    "budget": 2048,
+    "torch_gather_ms": 0.0632,
+    "triton_compact_ms": 0.0595,
+    "triton_speedup": 1.06,
+    "bandwidth_gb_s": 131.29,
+    "decode_full_ms": 0.0689,
+    "decode_compact_ms": 0.0398,
+    "decode_saved_per_step_ms": 0.0291,
+    "breakeven_decode_steps": 3
+  },
+  {
+    "seq_len": 8192,
+    "budget": 4096,
+    "torch_gather_ms": 0.1195,
+    "triton_compact_ms": 0.1149,
+    "triton_speedup": 1.04,
+    "bandwidth_gb_s": 136.03,
+    "decode_full_ms": 0.1218,
+    "decode_compact_ms": 0.0691,
+    "decode_saved_per_step_ms": 0.0527,
+    "breakeven_decode_steps": 3
+  }
+]

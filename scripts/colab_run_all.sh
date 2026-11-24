@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# EKVA v2: 1-Click Zero-Cost Automated Runner (Colab / Local / Cloud)
+# EKVA v2: 1-Click Zero-Cost Automated Runner (Colab / Kaggle / Local / Cloud)
 # 
-# Works on both GPU (NVIDIA T4/A100/RTX) and CPU fallback.
+# Works on both GPU (NVIDIA Dual T4 / Single T4 / A100 / RTX) and CPU fallback.
 # ==============================================================================
 set -e
 
+# Always anchor working directory to repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
+
+# Optimize CUDA allocator to prevent memory fragmentation on 15GB T4 GPUs
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 echo "=================================================================="
 echo "🚀 EKVA v2: Automated Production Test & Benchmark Suite"
+echo "Working directory: $(pwd)"
 echo "=================================================================="
 
 # 1. Environment and GPU inspection
@@ -17,11 +26,13 @@ import torch
 cuda_avail = torch.cuda.is_available()
 print(f'CUDA Available: {cuda_avail}')
 if cuda_avail:
-    print(f'GPU Device: {torch.cuda.get_device_name(0)}')
-    free_b, total_b = torch.cuda.mem_get_info(0)
-    print(f'VRAM: {free_b / 1024**3:.2f} GB free / {total_b / 1024**3:.2f} GB total')
+    num_gpus = torch.cuda.device_count()
+    print(f'Detected GPUs: {num_gpus}')
+    for i in range(num_gpus):
+        free_b, total_b = torch.cuda.mem_get_info(i)
+        print(f'  GPU {i}: {torch.cuda.get_device_name(i)} | {free_b / 1024**3:.2f} GB free / {total_b / 1024**3:.2f} GB total')
 else:
-    print('Running in CPU mode. (To test Triton GPU kernels in Colab, select: Runtime -> Change runtime type -> T4 GPU)')
+    print('Running in CPU mode. (To test Triton GPU kernels or models, enable GPU Accelerator: e.g. Kaggle GPU T4 x2 or Colab T4)')
 "
 
 # 2. Dependency installation
@@ -46,9 +57,12 @@ PYTHONPATH=. python3 experiments/benchmark_triton_crossover.py --budget-ratio 0.
 # 5. Real Model Smoke Evaluation
 echo "[Step 5/5] Running Real MoE Evaluation..."
 python3 -c "
-import torch, subprocess, sys
+import torch, subprocess, sys, gc
 if torch.cuda.is_available():
-    print('GPU detected. Launching 4-bit MoE evaluation on Qwen1.5-MoE...')
+    gc.collect()
+    torch.cuda.empty_cache()
+    num_gpus = torch.cuda.device_count()
+    print(f'GPU detected ({num_gpus} device(s)). Launching 4-bit MoE evaluation on Qwen1.5-MoE...')
     cmd = [
         sys.executable, 'scripts/run_real_evaluation_suite.py',
         '--model', 'qwen1.5-moe-a2.7b',
@@ -61,7 +75,7 @@ if torch.cuda.is_available():
     subprocess.run(cmd, check=True)
 else:
     print('No GPU detected. Skipping heavy model evaluation on CPU to avoid timeout.')
-    print('To run real model evaluations, enable T4 GPU in Google Colab.')
+    print('To run real model evaluations, enable T4 GPU in Kaggle (GPU T4 x2) or Google Colab.')
 "
 
 echo "=================================================================="
