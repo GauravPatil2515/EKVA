@@ -58,22 +58,30 @@ class MoERoutingHook:
 
         layer_idx = 0
         for name, module in self.model.named_modules():
-            # Match router/gate modules in popular MoE implementations
-            is_router = any(k in name.lower() for k in ["gate", "router", "block_sparse_moe.gate"])
+            # Match top-level MoE router/gate modules only.
+            # Strictly exclude individual expert internal gate_proj, shared expert gates, and layer norms.
+            name_lower = name.lower()
+            is_router = (
+                (name_lower.endswith(".gate") or name_lower.endswith(".router") or "block_sparse_moe.gate" in name_lower)
+                and not any(k in name_lower for k in ["shared", "proj", "layer_norm", "norm"])
+            )
             if is_router and hasattr(module, "forward"):
                 idx = layer_idx
                 
                 def make_hook(l_idx):
                     def hook_fn(mod, inp, out):
-                        # out is typically (router_logits, selected_experts) or tuple
+                        # out is typically (router_logits, selected_experts) or tensor of router_logits
                         if isinstance(out, tuple):
                             if len(out) >= 2 and isinstance(out[1], torch.Tensor):
                                 self.captured_routing[l_idx] = out[1].detach().cpu()
                             if len(out) >= 1 and isinstance(out[0], torch.Tensor):
                                 self.captured_weights[l_idx] = torch.softmax(out[0], dim=-1).detach().cpu()
                         elif isinstance(out, torch.Tensor):
-                            # Router logits: take topk
-                            topk_w, topk_i = torch.topk(torch.softmax(out, dim=-1), k=min(4, out.shape[-1]), dim=-1)
+                            # Router logits: take top-k dynamically from model config
+                            cfg = getattr(self.model, "config", None)
+                            k_top = getattr(cfg, "num_experts_per_tok", getattr(cfg, "top_k", 4)) if cfg else 4
+                            k = min(int(k_top), out.shape[-1])
+                            topk_w, topk_i = torch.topk(torch.softmax(out, dim=-1), k=k, dim=-1)
                             self.captured_routing[l_idx] = topk_i.detach().cpu()
                             self.captured_weights[l_idx] = topk_w.detach().cpu()
                     return hook_fn
