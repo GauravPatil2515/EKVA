@@ -47,11 +47,7 @@ Existing token-eviction algorithms (**SnapKV**, **H2O**, **StreamingLLM**) prune
 - **🛡️ Reasoning Preservation at 40% Budget:** Outperforms SnapKV by **+3.87 pp** on GSM8K and **+5.89 pp** on Needle-in-a-Haystack (NIAH), preventing the catastrophic 20+ point collapse seen in layer-adaptive baselines (CAKE).
 - **⏱️ Zero Extra Inference Overhead:** Routing signatures $\mathcal{R}_t = \{E_t^{(1)}, \ldots, E_t^{(L)}\}$ are harvested natively during the standard prefill forward pass via lightweight PyTorch hooks without extra forward passes or weight modification.
 - **🔄 Dynamic Streaming Recalibration:** Optional sliding-window EMA recalibration cascade adapts token budgets dynamically during ultra-long multi-turn generation.
-- **💻 Hardware-Agnostic & Free-Tier Ready:** Fully verified on NVIDIA A100 (80GB) and tested on Google Colab free-tier T4 GPUs with 4-bit quantization support.
-
-<p align="center">
-  <img src="assets/radar_inference_profile.png" alt="Multi-Dimensional Inference Profile" width="55%" style="border-radius: 8px;" />
-</p>
+- **💻 Hardware-Agnostic & Free-Tier Ready:** Fully verified on NVIDIA A100 (80GB) and tested on Google Colab / Kaggle free-tier T4 GPUs with 4-bit quantization support.
 
 ---
 
@@ -217,10 +213,6 @@ Because standard PyTorch slicing operations create expensive DRAM roundtrips whe
 - **$2.02\times$ to $2.05\times$ measured decode step speedup** on NVIDIA A100 GPUs.
 - **60% reduction in KV cache memory footprint** without memory fragmentation.
 - **Zero synchronization bubbles** across tensor parallel worker threads.
-
-<p align="center">
-  <img src="assets/sram_kernel_dataflow.png" alt="SRAM vs DRAM Hardware Dataflow" width="95%" style="border-radius: 8px;" />
-</p>
 
 ---
 
