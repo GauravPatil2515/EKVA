@@ -534,27 +534,56 @@ def run_humaneval_test(completion_code: str, test_code: str, entry_point: str, t
 
 def load_pg19_or_fallback(n: int) -> Tuple[List[str], str]:
     from datasets import load_dataset
+    # Try pg19 streaming first
     try:
-        ds = load_dataset("pg19", split="test", streaming=True)
+        ds = load_dataset("deepmind/pg19", split="test", streaming=True)
         texts = []
         for i, r in enumerate(ds):
             if i >= n:
                 break
             texts.append(r["text"][:4000])
         if texts:
-            return texts, "pg19/test"
+            return texts, "deepmind/pg19/test"
     except Exception:
         pass
-    ds = load_dataset("wikitext", "wikitext-103-raw-v1", split=f"test[:{n*20}]")
-    texts, buf = [], ""
-    for r in ds:
-        buf += r["text"]
-        if len(buf) > 3000:
-            texts.append(buf[:4000])
-            buf = ""
-        if len(texts) >= n:
-            break
-    return texts, "wikitext-103-raw-v1/test (pg19 unavailable)"
+
+    # Try standard wikitext
+    try:
+        ds = load_dataset("EleutherAI/wikitext_document_level", "wikitext-103-raw-v1", split="test", streaming=True)
+        texts = []
+        for i, r in enumerate(ds):
+            if i >= n:
+                break
+            texts.append(r["page"][:4000])
+        if texts:
+            return texts, "EleutherAI/wikitext/test"
+    except Exception:
+        pass
+
+    # Try raw wikitext with namespace
+    try:
+        ds = load_dataset("wikitext", "wikitext-103-raw-v1", split=f"test[:{n*20}]")
+        texts, buf = [], ""
+        for r in ds:
+            buf += r["text"]
+            if len(buf) > 3000:
+                texts.append(buf[:4000])
+                buf = ""
+            if len(texts) >= n:
+                break
+        if texts:
+            return texts, "wikitext-103-raw-v1/test"
+    except Exception:
+        pass
+
+    # Offline / resilient synthetic calibration corpus if HuggingFace URI fails
+    print("⚠️ Dataset fetch failed or HuggingFace URI format restricted. Using clean synthetic long-form calibration texts.")
+    synthetic_texts = [
+        "In theoretical computer science and high-performance computing, the memory bandwidth of modern graphics processing units represents the primary bottleneck during autoregressive decoding in large language models. The key-value cache grows linearly with context length, leading to severe latency penalties as each new token requires fetching historical keys and values from high-bandwidth memory. Mixture-of-experts architectures decouple self-attention from feed-forward computation by dispatching tokens across specialized expert sub-networks. This modular routing behavior produces distinct cross-layer routing signatures that reflect token functional roles."
+        * 10
+        for _ in range(n)
+    ]
+    return synthetic_texts, "synthetic_calibration_corpus"
 
 
 def build_niah_samples(filler_texts: List[str], tokenizer, n: int, seq_len: int = 1500) -> List[Dict]:
