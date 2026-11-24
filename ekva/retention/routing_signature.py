@@ -73,7 +73,7 @@ class MoERoutingHook:
                         # out is typically (router_logits, selected_experts) or tensor of router_logits
                         if isinstance(out, tuple):
                             if len(out) >= 2 and isinstance(out[1], torch.Tensor):
-                                self.captured_routing[l_idx] = out[1].detach().cpu()
+                                self.captured_routing[l_idx] = out[1].detach().to(torch.long).cpu()
                             if len(out) >= 1 and isinstance(out[0], torch.Tensor):
                                 self.captured_weights[l_idx] = torch.softmax(out[0], dim=-1).detach().cpu()
                         elif isinstance(out, torch.Tensor):
@@ -82,7 +82,7 @@ class MoERoutingHook:
                             k_top = getattr(cfg, "num_experts_per_tok", getattr(cfg, "top_k", 4)) if cfg else 4
                             k = min(int(k_top), out.shape[-1])
                             topk_w, topk_i = torch.topk(torch.softmax(out, dim=-1), k=k, dim=-1)
-                            self.captured_routing[l_idx] = topk_i.detach().cpu()
+                            self.captured_routing[l_idx] = topk_i.detach().to(torch.long).cpu()
                             self.captured_weights[l_idx] = topk_w.detach().cpu()
                     return hook_fn
 

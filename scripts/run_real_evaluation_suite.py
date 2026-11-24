@@ -205,7 +205,7 @@ def build_real_calibration(model, tokenizer, device, calib_texts: List[str], max
         # Real per-expert routing frequency + real per-expert attention-entropy
         # of the tokens that were routed there (needed for ExpertProfile.entropy,
         # which is defined as the average attention-entropy of tokens the expert sees).
-        idx = sig.expert_indices[0]  # (T, L, K)
+        idx = sig.expert_indices[0].to(torch.long)  # (T, L, K)
         T, L, K = idx.shape
         # token-level attention entropy over the (real) attention distribution
         # this token RECEIVED as a key, used as a proxy for "how spread out is
@@ -297,7 +297,7 @@ def compute_layerwise_correlation(model, tokenizer, profiles, num_experts, devic
         if out.attentions is None or len(out.attentions) == 0:
             continue
 
-        idx = sig.expert_indices[0]  # (T, L, K)
+        idx = sig.expert_indices[0].to(torch.long)  # (T, L, K)
         T, L, K = idx.shape
         if num_layers is None:
             num_layers = L
@@ -310,7 +310,7 @@ def compute_layerwise_correlation(model, tokenizer, profiles, num_experts, devic
                 score_table[e] = prof.score_multiplier
 
         for l in range(min(L, len(out.attentions))):
-            layer_r = score_table[idx[:, l, :].clamp(0, num_experts - 1)].mean(dim=-1).numpy()  # (T,)
+            layer_r = score_table[idx[:, l, :].to(torch.long).clamp(0, num_experts - 1)].mean(dim=-1).numpy()  # (T,)
             layer_attn = out.attentions[l][0]  # (H, T, T)
             layer_a = layer_attn.mean(dim=0).mean(dim=0).detach().cpu().numpy()  # (T,)
             n = min(len(layer_r), len(layer_a))

@@ -56,8 +56,8 @@ def compute_routing_conditioned_score(
             score_table[eid] = prof.score_multiplier
 
     # Vectorized lookup: (B, T, L, K) -> score values
-    # Clamp indices to valid table range
-    clamped_indices = indices.clamp(0, max_eid)
+    # Ensure integer indices for tensor indexing and clamp to valid range
+    clamped_indices = indices.to(torch.long).clamp(0, max_eid)
     token_expert_scores = score_table[clamped_indices] # (B, T, L, K)
 
     if weights is not None:
